@@ -32,12 +32,35 @@ const schema = defineSchema(
       role: v.optional(roleValidator), // role of the user. do not remove
     }).index("email", ["email"]), // index for the email. do not remove or modify
 
-    // add other tables here
+    // AyurSutra specific tables
+    practitioners: defineTable({
+      userId: v.id("users"),
+      specialization: v.array(v.string()),
+      experience: v.number(),
+      bio: v.string(),
+      contact: v.string(),
+      isVerified: v.boolean(),
+      clinicAddress: v.optional(v.string()),
+      imageUrl: v.optional(v.string()),
+    })
+      .index("by_userId", ["userId"])
+      .index("by_isVerified", ["isVerified"]),
 
-    // tableName: defineTable({
-    //   ...
-    //   // table fields
-    // }).index("by_field", ["field"])
+    appointments: defineTable({
+      practitionerId: v.id("practitioners"),
+      patientId: v.id("users"),
+      timeSlot: v.number(),
+      date: v.string(),
+      status: v.union(
+        v.literal("pending"),
+        v.literal("confirmed"),
+        v.literal("cancelled"),
+        v.literal("completed")
+      ),
+      notes: v.optional(v.string()),
+    })
+      .index("by_practitionerId_and_timeSlot", ["practitionerId", "timeSlot"])
+      .index("by_patientId_and_timeSlot", ["patientId", "timeSlot"]),
   },
   {
     schemaValidation: false,
