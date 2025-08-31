@@ -189,3 +189,35 @@ export const updateSessionStatus = mutation({
     return args.sessionId;
   },
 });
+
+export const getSlotOccupancy = query({
+  args: {
+    date: v.string(),
+    timeSlot: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const sameDaySessions = await ctx.db
+      .query("therapy_sessions")
+      .withIndex("by_sessionDate", (q) => q.eq("sessionDate", args.date))
+      .collect();
+
+    const busy = sameDaySessions.filter(
+      (s) => s.status === "scheduled" && s.timeSlot === args.timeSlot
+    );
+
+    const busyTherapistIds = busy.map((s) => s.therapistId);
+    const busyCount = busyTherapistIds.length;
+
+    // Also return total therapist count for quick free calculation
+    const totalTherapists = (await ctx.db.query("therapists").collect()).length;
+
+    return {
+      date: args.date,
+      timeSlot: args.timeSlot,
+      busyCount,
+      busyTherapistIds,
+      totalTherapists,
+      freeCount: Math.max(totalTherapists - busyCount, 0),
+    };
+  },
+});
