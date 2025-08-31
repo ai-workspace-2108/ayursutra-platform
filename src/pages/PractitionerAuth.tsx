@@ -3,12 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { motion } from "framer-motion";
-import { ArrowLeft, Phone, Shield, CheckCircle } from "lucide-react";
+import { ArrowLeft, Mail, Shield, CheckCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
 
-type AuthStep = "phone" | "otp" | "success";
+type AuthStep = "email" | "otp" | "success";
 
 const API_BASE = import.meta.env.VITE_CONVEX_URL as string;
 
@@ -17,9 +17,8 @@ export default function PractitionerAuth() {
   const [searchParams] = useSearchParams();
   const selectedRole = searchParams.get("role") || sessionStorage.getItem("selectedRole") || "doctor";
 
-  const [currentStep, setCurrentStep] = useState<AuthStep>("phone");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [countryCode] = useState("+91");
+  const [currentStep, setCurrentStep] = useState<AuthStep>("email");
+  const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState("");
@@ -37,14 +36,14 @@ export default function PractitionerAuth() {
     return () => clearInterval(interval);
   }, [resendTimer]);
 
-  const validatePhoneNumber = (phone: string) => {
-    const phoneRegex = /^[6-9]\d{9}$/;
-    return phoneRegex.test(phone);
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
   const handleSendOtp = async () => {
-    if (!validatePhoneNumber(phoneNumber)) {
-      toast.error("Please enter a valid 10-digit mobile number");
+    if (!validateEmail(email)) {
+      toast.error("Please enter a valid email address");
       return;
     }
 
@@ -56,7 +55,7 @@ export default function PractitionerAuth() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          phoneNumber: `${countryCode}${phoneNumber}`,
+          email,
           userRole: selectedRole,
         }),
       });
@@ -121,7 +120,7 @@ export default function PractitionerAuth() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          phoneNumber: `${countryCode}${phoneNumber}`,
+          email,
           otp,
           sessionId,
         }),
@@ -179,8 +178,10 @@ export default function PractitionerAuth() {
     }
   };
 
-  const formatPhoneDisplay = () => {
-    return `${countryCode} ${phoneNumber.slice(0, 5)} ${phoneNumber.slice(5)}`;
+  const formatEmailDisplay = () => {
+    const [localPart, domain] = email.split('@');
+    if (localPart.length <= 3) return email;
+    return `${localPart.slice(0, 2)}***@${domain}`;
   };
 
   const getRoleDisplayName = () => {
@@ -215,9 +216,9 @@ export default function PractitionerAuth() {
             
             {/* Progress Indicator */}
             <div className="hidden sm:flex items-center space-x-2 text-sm text-muted-foreground">
-              <span>Step {currentStep === "phone" ? "1" : currentStep === "otp" ? "2" : "3"} of 3:</span>
+              <span>Step {currentStep === "email" ? "1" : currentStep === "otp" ? "2" : "3"} of 3:</span>
               <span className="text-foreground font-medium">
-                {currentStep === "phone" && "Phone Verification"}
+                {currentStep === "email" && "Email Verification"}
                 {currentStep === "otp" && "OTP Verification"}
                 {currentStep === "success" && "Authentication Complete"}
               </span>
@@ -237,28 +238,28 @@ export default function PractitionerAuth() {
             <Card className="shadow-xl">
               <CardHeader className="text-center space-y-4">
                 <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                  {currentStep === "phone" && <Phone className="w-8 h-8 text-primary" />}
+                  {currentStep === "email" && <Mail className="w-8 h-8 text-primary" />}
                   {currentStep === "otp" && <Shield className="w-8 h-8 text-primary" />}
                   {currentStep === "success" && <CheckCircle className="w-8 h-8 text-green-600" />}
                 </div>
                 
                 <div>
                   <CardTitle className="text-2xl">
-                    {currentStep === "phone" && `${getRoleDisplayName()} Login`}
+                    {currentStep === "email" && `${getRoleDisplayName()} Login`}
                     {currentStep === "otp" && "Verify OTP"}
                     {currentStep === "success" && "Welcome!"}
                   </CardTitle>
                   <CardDescription className="text-base mt-2">
-                    {currentStep === "phone" && "Enter your registered phone number to continue"}
-                    {currentStep === "otp" && `We've sent a 6-digit code to ${formatPhoneDisplay()}`}
+                    {currentStep === "email" && "Enter your registered email address to continue"}
+                    {currentStep === "otp" && `We've sent a 6-digit code to ${formatEmailDisplay()}`}
                     {currentStep === "success" && "Authentication successful. Redirecting..."}
                   </CardDescription>
                 </div>
               </CardHeader>
 
               <CardContent className="space-y-6">
-                {/* Phone Number Step */}
-                {currentStep === "phone" && (
+                {/* Email Step */}
+                {currentStep === "email" && (
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -267,39 +268,25 @@ export default function PractitionerAuth() {
                   >
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-foreground">
-                        Phone Number
+                        Email Address
                       </label>
-                      <div className="flex space-x-2">
-                        <div className="w-20">
-                          <Input
-                            value={countryCode}
-                            disabled
-                            className="text-center"
-                          />
-                        </div>
-                        <Input
-                          type="tel"
-                          placeholder="XXXXX XXXXX"
-                          value={phoneNumber}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, "");
-                            if (value.length <= 10) {
-                              setPhoneNumber(value);
-                            }
-                          }}
-                          className="flex-1"
-                        />
-                      </div>
-                      {phoneNumber && !validatePhoneNumber(phoneNumber) && (
+                      <Input
+                        type="email"
+                        placeholder="your.email@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full"
+                      />
+                      {email && !validateEmail(email) && (
                         <p className="text-sm text-destructive">
-                          Please enter a valid 10-digit mobile number
+                          Please enter a valid email address
                         </p>
                       )}
                     </div>
 
                     <Button
                       onClick={handleSendOtp}
-                      disabled={!validatePhoneNumber(phoneNumber) || isLoading}
+                      disabled={!validateEmail(email) || isLoading}
                       className="w-full"
                       size="lg"
                     >
@@ -316,15 +303,15 @@ export default function PractitionerAuth() {
                     transition={{ duration: 0.5 }}
                     className="space-y-6"
                   >
-                    {/* Phone Number Display with Edit Option */}
+                    {/* Email Display with Edit Option */}
                     <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                       <span className="text-sm text-muted-foreground">
-                        {formatPhoneDisplay()}
+                        {formatEmailDisplay()}
                       </span>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setCurrentStep("phone")}
+                        onClick={() => setCurrentStep("email")}
                         className="text-primary hover:text-primary/80"
                       >
                         Edit

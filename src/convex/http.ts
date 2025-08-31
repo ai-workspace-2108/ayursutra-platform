@@ -14,13 +14,13 @@ http.route({
   handler: httpAction(async (ctx, req) => {
     try {
       const body = await req.json();
-      const { phoneNumber, userRole } = body;
+      const { email, userRole } = body;
 
-      if (!phoneNumber || !userRole) {
+      if (!email || !userRole) {
         return new Response(
           JSON.stringify({ 
             success: false, 
-            message: "Phone number and user role are required" 
+            message: "Email and user role are required" 
           }),
           { 
             status: 400,
@@ -29,13 +29,13 @@ http.route({
         );
       }
 
-      // Validate phone number format (basic validation)
-      const phoneRegex = /^\+91[6-9]\d{9}$/;
-      if (!phoneRegex.test(phoneNumber)) {
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
         return new Response(
           JSON.stringify({ 
             success: false, 
-            message: "Invalid phone number format" 
+            message: "Invalid email format" 
           }),
           { 
             status: 400,
@@ -45,12 +45,12 @@ http.route({
       }
 
       const result = await ctx.runMutation(internal.practitioner_auth_logic.generateAndStoreOtp, {
-        phoneNumber,
+        email,
         role: userRole,
       });
 
-      // In production, you would send SMS here using Twilio or similar service
-      console.log(`OTP for ${phoneNumber}: ${result.otpCode}`);
+      // In production, you would send email here using Resend or similar service
+      console.log(`OTP for ${email}: ${result.otpCode}`);
 
       return new Response(
         JSON.stringify({
@@ -89,13 +89,13 @@ http.route({
   handler: httpAction(async (ctx, req) => {
     try {
       const body = await req.json();
-      const { phoneNumber, otp, sessionId } = body;
+      const { email, otp, sessionId } = body;
 
-      if (!phoneNumber || !otp || !sessionId) {
+      if (!email || !otp || !sessionId) {
         return new Response(
           JSON.stringify({ 
             success: false, 
-            message: "Phone number, OTP, and session ID are required" 
+            message: "Email, OTP, and session ID are required" 
           }),
           { 
             status: 400,
@@ -105,7 +105,7 @@ http.route({
       }
 
       const result = await ctx.runMutation(internal.practitioner_auth_logic.verifyAndAuthenticateOtp, {
-        phoneNumber,
+        email,
         otpCode: otp,
         sessionId,
       });

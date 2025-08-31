@@ -2,10 +2,10 @@ import { v } from "convex/values";
 import { internalMutation, internalQuery } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
-// Generate and store OTP for phone number
+// Generate and store OTP for email
 export const generateAndStoreOtp = internalMutation({
   args: {
-    phoneNumber: v.string(),
+    email: v.string(),
     role: v.string(),
   },
   handler: async (ctx, args) => {
@@ -15,10 +15,10 @@ export const generateAndStoreOtp = internalMutation({
     // Set expiry to 5 minutes from now
     const expiresAt = Date.now() + 5 * 60 * 1000;
     
-    // Clean up any existing OTP sessions for this phone number
+    // Clean up any existing OTP sessions for this email
     const existingSessions = await ctx.db
       .query("otp_sessions")
-      .withIndex("by_phoneNumber", (q) => q.eq("phoneNumber", args.phoneNumber))
+      .withIndex("by_email", (q) => q.eq("email", args.email))
       .collect();
     
     for (const session of existingSessions) {
@@ -27,7 +27,7 @@ export const generateAndStoreOtp = internalMutation({
     
     // Create new OTP session
     const sessionId = await ctx.db.insert("otp_sessions", {
-      phoneNumber: args.phoneNumber,
+      email: args.email,
       otpCode,
       expiresAt,
       isVerified: false,
@@ -37,7 +37,7 @@ export const generateAndStoreOtp = internalMutation({
     
     return {
       sessionId,
-      otpCode, // In production, this would not be returned - OTP would be sent via SMS
+      otpCode, // In production, this would not be returned - OTP would be sent via email
       expiresAt,
     };
   },
@@ -46,7 +46,7 @@ export const generateAndStoreOtp = internalMutation({
 // Verify OTP and authenticate user
 export const verifyAndAuthenticateOtp = internalMutation({
   args: {
-    phoneNumber: v.string(),
+    email: v.string(),
     otpCode: v.string(),
     sessionId: v.id("otp_sessions"),
   },
@@ -91,14 +91,14 @@ export const verifyAndAuthenticateOtp = internalMutation({
     // Check if user exists
     const existingUser = await ctx.db
       .query("users")
-      .withIndex("by_phoneNumber", (q) => q.eq("phoneNumber", args.phoneNumber))
+      .withIndex("email", (q) => q.eq("email", args.email))
       .unique();
     
     let userId: Id<"users">;
     let isNewUser = false;
     
     if (existingUser) {
-      // Update existing user's last login
+      // Update existing user's role
       await ctx.db.patch(existingUser._id, {
         role: session.role as any,
       });
@@ -106,7 +106,7 @@ export const verifyAndAuthenticateOtp = internalMutation({
     } else {
       // Create new user
       userId = await ctx.db.insert("users", {
-        phoneNumber: args.phoneNumber,
+        email: args.email,
         role: session.role as any,
         isAnonymous: false,
       });
@@ -121,15 +121,15 @@ export const verifyAndAuthenticateOtp = internalMutation({
   },
 });
 
-// Get user by phone number
-export const getUserByPhone = internalQuery({
+// Get user by email
+export const getUserByEmail = internalQuery({
   args: {
-    phoneNumber: v.string(),
+    email: v.string(),
   },
   handler: async (ctx, args) => {
     return await ctx.db
       .query("users")
-      .withIndex("by_phoneNumber", (q) => q.eq("phoneNumber", args.phoneNumber))
+      .withIndex("email", (q) => q.eq("email", args.email))
       .unique();
   },
 });

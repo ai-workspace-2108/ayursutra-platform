@@ -30,20 +30,18 @@ const schema = defineSchema(
       isAnonymous: v.optional(v.boolean()), // is the user anonymous. do not remove
 
       role: v.optional(roleValidator), // role of the user. do not remove
-      phoneNumber: v.optional(v.string()), // phone number for practitioner auth
     })
-      .index("email", ["email"]) // index for the email. do not remove or modify
-      .index("by_phoneNumber", ["phoneNumber"]), // index for phone number lookup
+      .index("email", ["email"]), // index for the email. do not remove or modify
 
-    // OTP sessions table for phone verification
+    // OTP sessions table for email verification
     otp_sessions: defineTable({
-      phoneNumber: v.string(),
+      email: v.string(),
       otpCode: v.string(),
       expiresAt: v.number(),
       isVerified: v.boolean(),
       attemptsCount: v.number(),
       role: v.string(),
-    }).index("by_phoneNumber", ["phoneNumber"]),
+    }).index("by_email", ["email"]),
 
     // AyurSutra specific tables
     practitioners: defineTable({
