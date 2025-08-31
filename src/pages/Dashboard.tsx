@@ -40,9 +40,14 @@ export default function Dashboard() {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("09:00-10:00");
   const [selectedTherapistId, setSelectedTherapistId] = useState<string>("");
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
+  const [dietitianSearch, setDietitianSearch] = useState<string>("");
+  const [selectedPatientForDietitianId, setSelectedPatientForDietitianId] = useState<string>("");
+  const [selectedDietitianIdDM, setSelectedDietitianIdDM] = useState<string>("");
+  const [dietitianNotes, setDietitianNotes] = useState<string>("");
 
   const createSession = useMutation(api.therapists.createTherapySession);
   const cancelSession = useMutation(api.therapists.cancelTherapySession);
+  const createDietitianAssignment = useMutation(api.dietitians.createDietitianAssignment);
 
   // Fetch dashboard data
   const therapistStats = useQuery(api.therapists.getTherapistStats);
@@ -57,6 +62,14 @@ export default function Dashboard() {
   const selectedTherapistHistory = useQuery(
     api.therapists.getTherapistSessionHistory,
     selectedTherapistId ? { therapistId: selectedTherapistId as any, limit: 50 } : "skip"
+  );
+  const availableDietitians = useQuery(api.dietitians.getAvailableDietitians);
+
+  const selectedPatientForDietitian = (patients || []).find(
+    (p) => String(p._id) === selectedPatientForDietitianId
+  );
+  const selectedDietitian = (availableDietitians || []).find(
+    (d) => String(d._id) === selectedDietitianIdDM
   );
 
   const handleSignOut = async () => {
@@ -540,6 +553,331 @@ export default function Dashboard() {
     );
   };
 
+  const renderDietitianManagement = () => {
+    const filteredPatients = (patients || []).filter((p) => {
+      if (!dietitianSearch.trim()) return true;
+      const s = dietitianSearch.toLowerCase();
+      return (
+        p.name.toLowerCase().includes(s) ||
+        p.contact.toLowerCase().includes(s) ||
+        (p.email || "").toLowerCase().includes(s)
+      );
+    });
+
+    const handleAssignDietitian = async () => {
+      try {
+        if (!user?._id) {
+          toast("Please sign in again.");
+          return;
+        }
+        if (!selectedPatientForDietitianId) {
+          toast("Select a patient first.");
+          return;
+        }
+        if (!selectedDietitianIdDM) {
+          toast("Select a dietitian.");
+          return;
+        }
+
+        await createDietitianAssignment({
+          patientId: selectedPatientForDietitianId as any,
+          dietitianId: selectedDietitianIdDM as any,
+          doctorId: user._id,
+          notes: dietitianNotes || undefined,
+        });
+        toast("Patient details sent to dietitian.");
+        setDietitianNotes("");
+      } catch (e: any) {
+        toast(e.message || "Failed to assign dietitian.");
+      }
+    };
+
+    return (
+      <div className="space-y-6">
+        {/* Section header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">Dietitian Management</h2>
+            <p className="text-muted-foreground">
+              Patient selection, Dietitian assignment, and information transfer
+            </p>
+          </div>
+        </div>
+
+        {/* Top controls */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Patient List</CardTitle>
+            <CardDescription>
+              Choose a patient to assign to a dietitian
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2">
+                <Input
+                  placeholder="Search patients by name, phone, or email"
+                  value={dietitianSearch}
+                  onChange={(e) => setDietitianSearch(e.target.value)}
+                />
+              </div>
+              <div>
+                <Select
+                  value={selectedPatientForDietitianId}
+                  onValueChange={setSelectedPatientForDietitianId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select patient" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredPatients.map((p) => {
+                      const assigned =
+                        !!p.assignedDietitianId || !!p.assignedTherapistId;
+                      return (
+                        <SelectItem key={String(p._id)} value={String(p._id)}>
+                          {p.name} • {p.age} • {p.gender}
+                          {assigned ? " • Assigned" : " • Unassigned"}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Patient Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredPatients.map((p) => {
+                const isSelected =
+                  selectedPatientForDietitianId === String(p._id);
+                const isAssigned = !!p.assignedDietitianId;
+                return (
+                  <Card
+                    key={String(p._id)}
+                    className={`card-hover ${isSelected ? "ring-2 ring-primary" : ""}`}
+                  >
+                    <CardHeader className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base">{p.name}</CardTitle>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded ${
+                            isAssigned
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
+                        >
+                          {isAssigned ? "Assigned" : "Unassigned"}
+                        </span>
+                      </div>
+                      <CardDescription className="text-xs">
+                        Age {p.age} • {p.gender} • {p.contact}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="text-xs text-muted-foreground">
+                        BMI: {p.bmi} ({p.bmiCategory}) • Dosha: {p.dominantDosha}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant={isSelected ? "secondary" : "outline"}
+                          size="sm"
+                          onClick={() =>
+                            setSelectedPatientForDietitianId(String(p._id))
+                          }
+                        >
+                          {isSelected ? "Selected" : "Select"}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            setSelectedPatientForDietitianId(String(p._id))
+                          }
+                        >
+                          View Full Profile
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Dietitians */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Available Dietitians</CardTitle>
+            <CardDescription>
+              Select a dietitian to assign the patient to
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {(availableDietitians || []).map((d) => {
+                const isSelected = selectedDietitianIdDM === String(d._id);
+                const capacity = `${d.currentPatientCount}/${d.maxPatientsPerDay}`;
+                const capacityPct =
+                  Math.min(
+                    100,
+                    Math.round((d.currentPatientCount / d.maxPatientsPerDay) * 100)
+                  ) || 0;
+
+                return (
+                  <Card
+                    key={String(d._id)}
+                    className={`card-hover ${isSelected ? "ring-2 ring-primary" : ""}`}
+                  >
+                    <CardHeader className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base">{d.name}</CardTitle>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded ${
+                            d.isAvailable
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {d.isAvailable ? "Available" : "Unavailable"}
+                        </span>
+                      </div>
+                      <CardDescription className="text-xs">
+                        {d.specialization.join(", ")}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="text-xs text-muted-foreground">
+                        Experience: {d.experience} yrs • Rating: {d.rating ?? "N/A"}
+                      </div>
+                      <div className="text-xs">
+                        Capacity: {capacity} ({capacityPct}%)
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant={isSelected ? "secondary" : "outline"}
+                          size="sm"
+                          onClick={() => setSelectedDietitianIdDM(String(d._id))}
+                        >
+                          {isSelected ? "Selected" : "Select"}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedDietitianIdDM(String(d._id))}
+                        >
+                          View Profile
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Transfer details / Confirmation */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Send Patient Details</CardTitle>
+            <CardDescription>
+              Review summary and send to the selected dietitian
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Patient Summary */}
+              <div className="lg:col-span-1">
+                <Card className="h-full">
+                  <CardHeader>
+                    <CardTitle className="text-base">Patient Summary</CardTitle>
+                    <CardDescription>
+                      Key health metrics and Ayurvedic profile
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    {selectedPatientForDietitian ? (
+                      <>
+                        <div className="font-medium">{selectedPatientForDietitian.name}</div>
+                        <div className="text-muted-foreground">
+                          {selectedPatientForDietitian.age} • {selectedPatientForDietitian.gender}
+                        </div>
+                        <div>
+                          BMI: {selectedPatientForDietitian.bmi} (
+                          {selectedPatientForDietitian.bmiCategory})
+                        </div>
+                        <div>
+                          Dominant Dosha: {selectedPatientForDietitian.dominantDosha}
+                        </div>
+                        <div className="text-muted-foreground">
+                          Goals: {selectedPatientForDietitian.healthGoals.join(", ")}
+                        </div>
+                        <div className="text-muted-foreground">
+                          Allergies:{" "}
+                          {selectedPatientForDietitian.allergies.length
+                            ? selectedPatientForDietitian.allergies.join(", ")
+                            : "None"}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-muted-foreground">No patient selected.</div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Dietitian Summary */}
+              <div className="lg:col-span-1">
+                <Card className="h-full">
+                  <CardHeader>
+                    <CardTitle className="text-base">Dietitian</CardTitle>
+                    <CardDescription>Profile overview</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    {selectedDietitian ? (
+                      <>
+                        <div className="font-medium">{selectedDietitian.name}</div>
+                        <div className="text-muted-foreground">
+                          {selectedDietitian.specialization.join(", ")}
+                        </div>
+                        <div>
+                          Capacity: {selectedDietitian.currentPatientCount}/
+                          {selectedDietitian.maxPatientsPerDay}
+                        </div>
+                        <div>Experience: {selectedDietitian.experience} yrs</div>
+                        <div>Rating: {selectedDietitian.rating ?? "N/A"}</div>
+                      </>
+                    ) : (
+                      <div className="text-muted-foreground">No dietitian selected.</div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Notes and Action */}
+              <div className="lg:col-span-1 space-y-3">
+                <label className="text-sm font-medium">Special Instructions / Notes</label>
+                <Input
+                  placeholder="Add specific concerns, therapy coordination notes, etc."
+                  value={dietitianNotes}
+                  onChange={(e) => setDietitianNotes(e.target.value)}
+                />
+                <Button className="w-full mt-2" onClick={handleAssignDietitian}>
+                  Send Details to Dietitian
+                </Button>
+                <div className="text-xs text-muted-foreground">
+                  Assignment respects real-time capacity. If dietitian is at capacity, the
+                  operation will be prevented.
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
   const renderContent = () => {
     switch (activeView) {
       case "overview":
@@ -547,33 +885,7 @@ export default function Dashboard() {
       case "therapist-management":
         return renderTherapistManagement();
       case "dietitian-management":
-        return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold">Dietitian Management</h2>
-                <p className="text-muted-foreground">Manage nutrition plans and dietitian assignments</p>
-              </div>
-            </div>
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-center py-12">
-                  <Apple className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Dietitian Management</h3>
-                  <p className="text-muted-foreground mb-4">
-                    This feature is being implemented. You'll be able to:
-                  </p>
-                  <ul className="text-sm text-muted-foreground space-y-1 max-w-md mx-auto">
-                    <li>• View available dietitians and their capacity</li>
-                    <li>• Assign patients to dietitians</li>
-                    <li>• Transfer patient details for nutrition planning</li>
-                    <li>• Track dietary progress and outcomes</li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return renderDietitianManagement();
       case "patient-management":
         return (
           <div className="space-y-6">
