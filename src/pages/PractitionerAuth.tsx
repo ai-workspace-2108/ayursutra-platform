@@ -10,6 +10,8 @@ import { toast } from "sonner";
 
 type AuthStep = "phone" | "otp" | "success";
 
+const API_BASE = import.meta.env.VITE_CONVEX_URL as string;
+
 export default function PractitionerAuth() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -48,7 +50,7 @@ export default function PractitionerAuth() {
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/auth/send-otp", {
+      const response = await fetch(`${API_BASE}/api/auth/send-otp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -113,7 +115,7 @@ export default function PractitionerAuth() {
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/auth/verify-otp", {
+      const response = await fetch(`${API_BASE}/api/auth/verify-otp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
