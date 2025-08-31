@@ -59,7 +59,28 @@ export default function PractitionerAuth() {
         }),
       });
 
-      const data = await response.json();
+      // Robust parsing: read text first; handle non-JSON and non-OK cleanly
+      const raw = await response.text();
+      if (!response.ok) {
+        console.error("Send OTP failed:", response.status, response.statusText, raw);
+        // Try to extract message from JSON; else show raw or generic
+        let msg = raw;
+        try {
+          const parsed = JSON.parse(raw);
+          msg = parsed?.message || msg;
+        } catch {}
+        toast.error(msg || `Failed to send OTP (${response.status})`);
+        return;
+      }
+
+      let data: any;
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        console.error("Send OTP: invalid JSON response:", raw);
+        toast.error("Unexpected server response. Please try again.");
+        return;
+      }
 
       if (data.success) {
         setSessionId(data.sessionId);
@@ -67,7 +88,7 @@ export default function PractitionerAuth() {
         setCurrentStep("otp");
         setResendTimer(60);
         toast.success("OTP sent successfully!");
-        
+
         // Show development OTP in console and toast for testing
         if (data.developmentOtp) {
           console.log("Development OTP:", data.developmentOtp);
@@ -78,7 +99,7 @@ export default function PractitionerAuth() {
       }
     } catch (error) {
       console.error("Send OTP error:", error);
-      toast.error("Network error. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Network error. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -104,16 +125,36 @@ export default function PractitionerAuth() {
         }),
       });
 
-      const data = await response.json();
+      // Robust parsing: read text first; handle non-JSON and non-OK cleanly
+      const raw = await response.text();
+      if (!response.ok) {
+        console.error("Verify OTP failed:", response.status, response.statusText, raw);
+        let msg = raw;
+        try {
+          const parsed = JSON.parse(raw);
+          msg = parsed?.message || msg;
+        } catch {}
+        toast.error(msg || `Failed to verify OTP (${response.status})`);
+        return;
+      }
+
+      let data: any;
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        console.error("Verify OTP: invalid JSON response:", raw);
+        toast.error("Unexpected server response. Please try again.");
+        return;
+      }
 
       if (data.success) {
         setCurrentStep("success");
         toast.success("Authentication successful!");
-        
+
         // Store user info in session storage
         sessionStorage.setItem("userId", data.userId);
         sessionStorage.setItem("userRole", data.role);
-        
+
         // Redirect after a short delay
         setTimeout(() => {
           navigate(data.redirectTo);
@@ -123,7 +164,7 @@ export default function PractitionerAuth() {
       }
     } catch (error) {
       console.error("Verify OTP error:", error);
-      toast.error("Network error. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Network error. Please try again.");
     } finally {
       setIsLoading(false);
     }
