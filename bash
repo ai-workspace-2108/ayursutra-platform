@@ -1,1 +1,1 @@
-npx convex run dev:seedTestData
+npx convex run seedData:seedTestData

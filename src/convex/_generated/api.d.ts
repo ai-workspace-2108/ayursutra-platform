@@ -16,8 +16,12 @@ import type {
 import type * as auth_emailOtp from "../auth/emailOtp.js";
 import type * as auth from "../auth.js";
 import type * as dev from "../dev.js";
+import type * as dietitians from "../dietitians.js";
 import type * as http from "../http.js";
+import type * as patients from "../patients.js";
 import type * as practitioner_auth_logic from "../practitioner_auth_logic.js";
+import type * as seedData from "../seedData.js";
+import type * as therapists from "../therapists.js";
 import type * as users from "../users.js";
 
 /**
@@ -32,8 +36,12 @@ declare const fullApi: ApiFromModules<{
   "auth/emailOtp": typeof auth_emailOtp;
   auth: typeof auth;
   dev: typeof dev;
+  dietitians: typeof dietitians;
   http: typeof http;
+  patients: typeof patients;
   practitioner_auth_logic: typeof practitioner_auth_logic;
+  seedData: typeof seedData;
+  therapists: typeof therapists;
   users: typeof users;
 }>;
 export declare const api: FilterApi<

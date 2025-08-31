@@ -1,0 +1,139 @@
+import { query, mutation } from "./_generated/server";
+import { v } from "convex/values";
+
+// Get all dietitians
+export const getAllDietitians = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("dietitians").collect();
+  },
+});
+
+// Get available dietitians
+export const getAvailableDietitians = query({
+  args: {},
+  handler: async (ctx) => {
+    const dietitians = await ctx.db
+      .query("dietitians")
+      .withIndex("by_isAvailable", (q) => q.eq("isAvailable", true))
+      .collect();
+
+    // Filter by capacity
+    return dietitians.filter(d => d.currentPatientCount < d.maxPatientsPerDay);
+  },
+});
+
+// Get dietitian by ID
+export const getDietitianById = query({
+  args: { dietitianId: v.id("dietitians") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.dietitianId);
+  },
+});
+
+// Create dietitian assignment
+export const createDietitianAssignment = mutation({
+  args: {
+    patientId: v.id("patients"),
+    dietitianId: v.id("dietitians"),
+    doctorId: v.id("users"),
+    notes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Check dietitian capacity
+    const dietitian = await ctx.db.get(args.dietitianId);
+    if (!dietitian) throw new Error("Dietitian not found");
+    
+    if (dietitian.currentPatientCount >= dietitian.maxPatientsPerDay) {
+      throw new Error("Dietitian has reached maximum patient capacity");
+    }
+
+    const assignmentId = await ctx.db.insert("dietitian_assignments", {
+      ...args,
+      assignedDate: new Date().toISOString().split('T')[0],
+      status: "active",
+    });
+
+    // Update dietitian's current patient count
+    await ctx.db.patch(args.dietitianId, {
+      currentPatientCount: dietitian.currentPatientCount + 1,
+    });
+
+    // Update patient's assigned dietitian
+    await ctx.db.patch(args.patientId, {
+      assignedDietitianId: args.dietitianId,
+    });
+
+    return assignmentId;
+  },
+});
+
+// Get dietitian assignments
+export const getDietitianAssignments = query({
+  args: {
+    dietitianId: v.id("dietitians"),
+    status: v.optional(v.union(
+      v.literal("active"),
+      v.literal("completed"),
+      v.literal("cancelled")
+    )),
+  },
+  handler: async (ctx, args) => {
+    let query = ctx.db
+      .query("dietitian_assignments")
+      .withIndex("by_dietitianId", (q) => q.eq("dietitianId", args.dietitianId));
+
+    if (args.status) {
+      query = query.filter((q) => q.eq(q.field("status"), args.status));
+    }
+
+    const assignments = await query.collect();
+
+    // Get patient details for each assignment
+    const assignmentsWithPatients = await Promise.all(
+      assignments.map(async (assignment) => {
+        const patient = await ctx.db.get(assignment.patientId);
+        return {
+          ...assignment,
+          patient,
+        };
+      })
+    );
+
+    return assignmentsWithPatients;
+  },
+});
+
+// Update assignment status
+export const updateAssignmentStatus = mutation({
+  args: {
+    assignmentId: v.id("dietitian_assignments"),
+    status: v.union(
+      v.literal("active"),
+      v.literal("completed"),
+      v.literal("cancelled")
+    ),
+    notes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const assignment = await ctx.db.get(args.assignmentId);
+    if (!assignment) throw new Error("Assignment not found");
+
+    await ctx.db.patch(args.assignmentId, {
+      status: args.status,
+      notes: args.notes,
+    });
+
+    // If assignment is completed or cancelled, decrease dietitian's patient count
+    if (args.status === "completed" || args.status === "cancelled") {
+      const dietitian = await ctx.db.get(assignment.dietitianId);
+      if (dietitian && dietitian.currentPatientCount > 0) {
+        await ctx.db.patch(assignment.dietitianId, {
+          currentPatientCount: dietitian.currentPatientCount - 1,
+        });
+      }
+    }
+
+    return args.assignmentId;
+  },
+});

@@ -55,8 +55,15 @@ export default function RoleSelection() {
     if (selectedRole) {
       // Store role in session storage for later use
       sessionStorage.setItem('selectedRole', selectedRole);
-      // Navigate to practitioner auth for verification
-      navigate('/practitioner-auth');
+      
+      // Navigate based on selected role
+      if (selectedRole === 'doctor') {
+        // Doctors go directly to dashboard
+        navigate('/dashboard');
+      } else {
+        // Other roles go to practitioner auth for verification
+        navigate('/practitioner-auth');
+      }
     }
   };
 
