@@ -7,6 +7,8 @@ import { ArrowLeft, Mail, Shield, CheckCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 type AuthStep = "email" | "otp" | "success";
 
@@ -54,6 +56,8 @@ export default function PractitionerAuth() {
   const [resendTimer, setResendTimer] = useState(0);
   const [developmentOtp, setDevelopmentOtp] = useState("");
 
+  // Using HTTP endpoints; Convex mutation hooks not required
+
   // Timer for resend OTP
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -78,45 +82,42 @@ export default function PractitionerAuth() {
 
     setIsLoading(true);
     try {
-      const response = await postJson("/api/auth/send-otp", {
+      const resp = await postJson("/api/auth/send-otp", {
         email,
         userRole: selectedRole,
       });
 
-      // Robust parsing: read text first; handle non-JSON cleanly
-      const raw = await response.text();
-
-      let data: any;
-      try {
-        data = JSON.parse(raw);
-      } catch (e) {
-        console.error("Send OTP: invalid JSON response:", raw);
-        toast.error("Unexpected server response. Please try again.");
-        return;
+      const raw = await resp.text();
+      if (!resp.ok) {
+        console.error("Send OTP failed:", resp.status, raw);
+        throw new Error(`Failed to send OTP (${resp.status})`);
       }
 
-      if (data.success) {
-        setSessionId(data.sessionId);
-        setDevelopmentOtp(data.developmentOtp || ""); // For development only
-        setCurrentStep("otp");
-        setResendTimer(60);
-        toast.success("OTP sent successfully!");
+      let data: any = {};
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        console.error("Send OTP invalid JSON:", raw);
+        throw new Error("Unexpected server response while sending OTP");
+      }
 
-        if (data.developmentOtp) {
-          console.log("Development OTP:", data.developmentOtp);
-          toast.info(`Development OTP: ${data.developmentOtp}`, { duration: 10000 });
-        }
-      } else {
-        toast.error(data.message || "Failed to send OTP");
+      if (!data.success) {
+        throw new Error(data.message || "Failed to send OTP");
+      }
+
+      setSessionId(data.sessionId);
+      setDevelopmentOtp(data.developmentOtp || "");
+      setCurrentStep("otp");
+      setResendTimer(60);
+      toast.success("OTP sent successfully!");
+
+      if (data.developmentOtp) {
+        console.log("Development OTP:", data.developmentOtp);
+        toast.info(`Development OTP: ${data.developmentOtp}`, { duration: 10000 });
       }
     } catch (error) {
       console.error("Send OTP error:", error);
-      const msg =
-        error && typeof error === "object" && "status" in (error as any)
-          ? `Failed to send OTP (${(error as any).status})`
-          : error instanceof Error
-          ? error.message
-          : "Network error. Please try again.";
+      const msg = error instanceof Error ? error.message : "Failed to send OTP";
       toast.error(msg);
     } finally {
       setIsLoading(false);
@@ -131,44 +132,43 @@ export default function PractitionerAuth() {
 
     setIsLoading(true);
     try {
-      const response = await postJson("/api/auth/verify-otp", {
+      const resp = await postJson("/api/auth/verify-otp", {
         email,
         otp,
         sessionId,
       });
 
-      const raw = await response.text();
+      const raw = await resp.text();
+      if (!resp.ok) {
+        console.error("Verify OTP failed:", resp.status, raw);
+        throw new Error(`Failed to verify OTP (${resp.status})`);
+      }
 
-      let data: any;
+      let data: any = {};
       try {
-        data = JSON.parse(raw);
+        data = raw ? JSON.parse(raw) : {};
       } catch (e) {
-        console.error("Verify OTP: invalid JSON response:", raw);
-        toast.error("Unexpected server response. Please try again.");
-        return;
+        console.error("Verify OTP invalid JSON:", raw);
+        throw new Error("Unexpected server response while verifying OTP");
       }
 
-      if (data.success) {
-        setCurrentStep("success");
-        toast.success("Authentication successful!");
-
-        sessionStorage.setItem("userId", data.userId);
-        sessionStorage.setItem("userRole", data.role);
-
-        setTimeout(() => {
-          navigate(data.redirectTo);
-        }, 2000);
-      } else {
-        toast.error(data.message || "Invalid OTP");
+      if (!data.success) {
+        throw new Error(data.message || "Failed to verify OTP");
       }
+
+      setCurrentStep("success");
+      toast.success("Authentication successful!");
+
+      if (data.userId) sessionStorage.setItem("userId", data.userId);
+      if (data.role) sessionStorage.setItem("userRole", data.role);
+
+      setTimeout(() => {
+        // Keep flow simple and working: go to dashboard
+        navigate("/dashboard");
+      }, 1200);
     } catch (error) {
       console.error("Verify OTP error:", error);
-      const msg =
-        error && typeof error === "object" && "status" in (error as any)
-          ? `Failed to verify OTP (${(error as any).status})`
-          : error instanceof Error
-          ? error.message
-          : "Network error. Please try again.";
+      const msg = error instanceof Error ? error.message : "Failed to verify OTP";
       toast.error(msg);
     } finally {
       setIsLoading(false);

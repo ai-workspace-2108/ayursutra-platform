@@ -1,6 +1,8 @@
 import { v } from "convex/values";
 import { internalMutation, internalQuery } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { mutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 
 // Generate and store OTP for email
 export const generateAndStoreOtp = internalMutation({
@@ -118,6 +120,41 @@ export const verifyAndAuthenticateOtp = internalMutation({
       isNewUser,
       role: session.role,
     };
+  },
+});
+
+// Public mutation: send OTP via email (wraps internal)
+export const sendOtp: any = mutation({
+  args: {
+    email: v.string(),
+    role: v.string(),
+  },
+  handler: async (ctx, args): Promise<any> => {
+    const result: any = await ctx.runMutation(
+      internal.practitioner_auth_logic.generateAndStoreOtp,
+      { email: args.email, role: args.role }
+    );
+    return result;
+  },
+});
+
+// Public mutation: verify OTP (wraps internal)
+export const verifyOtp: any = mutation({
+  args: {
+    email: v.string(),
+    otpCode: v.string(),
+    sessionId: v.id("otp_sessions"),
+  },
+  handler: async (ctx, args): Promise<any> => {
+    const result: any = await ctx.runMutation(
+      internal.practitioner_auth_logic.verifyAndAuthenticateOtp,
+      {
+        email: args.email,
+        otpCode: args.otpCode,
+        sessionId: args.sessionId,
+      }
+    );
+    return result;
   },
 });
 
