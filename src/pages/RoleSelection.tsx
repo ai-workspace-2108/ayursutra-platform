@@ -55,8 +55,8 @@ export default function RoleSelection() {
     if (selectedRole) {
       // Store role in session storage for later use
       sessionStorage.setItem('selectedRole', selectedRole);
-      // Navigate to practitioner auth with role parameter
-      navigate(`/practitioner-auth?role=${selectedRole}`);
+      // Navigate to practitioner auth for verification
+      navigate('/practitioner-auth');
     }
   };
 
