@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { useMutation } from "convex/react";
 import { generateTimeSlots, formatDate } from "@/lib/utils";
 import { format } from "date-fns";
+import { Textarea } from "@/components/ui/textarea";
 
 type DashboardView = "overview" | "therapist-management" | "dietitian-management" | "patient-management";
 
@@ -44,10 +45,33 @@ export default function Dashboard() {
   const [selectedPatientForDietitianId, setSelectedPatientForDietitianId] = useState<string>("");
   const [selectedDietitianIdDM, setSelectedDietitianIdDM] = useState<string>("");
   const [dietitianNotes, setDietitianNotes] = useState<string>("");
+  const [patientForm, setPatientForm] = useState({
+    name: "",
+    age: "",
+    gender: "",
+    contact: "",
+    email: "",
+    address: "",
+    emergencyContact: "",
+    height: "",
+    weight: "",
+    bloodPressure: "",
+    medicalHistory: "",
+    currentMedications: "",
+    allergies: "",
+    prakriti: "",
+    vikriti: "",
+    dominantDosha: "",
+    constitutionType: "",
+    healthGoals: "",
+    workSchedule: "",
+    preferredSessionTime: "",
+  });
 
   const createSession = useMutation(api.therapists.createTherapySession);
   const cancelSession = useMutation(api.therapists.cancelTherapySession);
   const createDietitianAssignment = useMutation(api.dietitians.createDietitianAssignment);
+  const registerPatient = useMutation(api.patients.registerPatient);
 
   // Fetch dashboard data
   const therapistStats = useQuery(api.therapists.getTherapistStats);
@@ -878,6 +902,285 @@ export default function Dashboard() {
     );
   };
 
+  const renderPatientManagement = () => {
+    const handleChange = (field: keyof typeof patientForm, value: string) => {
+      setPatientForm((prev) => ({ ...prev, [field]: value }));
+    };
+
+    const handleRegister = async () => {
+      try {
+        if (!user?._id) {
+          toast("Please sign in again.");
+          return;
+        }
+
+        // Basic required validation
+        const requiredFields = [
+          "name","age","gender","contact","address","emergencyContact",
+          "height","weight","prakriti","dominantDosha","constitutionType",
+          "healthGoals","workSchedule","preferredSessionTime"
+        ] as const;
+
+        for (const f of requiredFields) {
+          const v = patientForm[f];
+          if (!v || String(v).trim() === "") {
+            toast(`Please fill ${f}`);
+            return;
+          }
+        }
+
+        // Helper to map comma separated strings -> trimmed array
+        const toArray = (s: string): string[] =>
+          s
+            .split(",")
+            .map((x) => x.trim())
+            .filter((x) => x.length > 0);
+
+        await registerPatient({
+          name: patientForm.name.trim(),
+          age: Number(patientForm.age),
+          gender: patientForm.gender as any,
+          contact: patientForm.contact.trim(),
+          email: patientForm.email.trim() || undefined,
+          address: patientForm.address.trim(),
+          emergencyContact: patientForm.emergencyContact.trim(),
+          height: Number(patientForm.height),
+          weight: Number(patientForm.weight),
+          bloodPressure: patientForm.bloodPressure.trim() || undefined,
+          medicalHistory: toArray(patientForm.medicalHistory),
+          currentMedications: toArray(patientForm.currentMedications),
+          allergies: toArray(patientForm.allergies),
+          prakriti: patientForm.prakriti as any,
+          vikriti: (patientForm.vikriti.trim() ? (patientForm.vikriti as any) : undefined),
+          dominantDosha: patientForm.dominantDosha.trim(),
+          constitutionType: patientForm.constitutionType.trim(),
+          healthGoals: toArray(patientForm.healthGoals),
+          workSchedule: patientForm.workSchedule.trim(),
+          preferredSessionTime: patientForm.preferredSessionTime.trim(),
+          doctorId: user._id,
+        });
+
+        toast("Patient registered successfully.");
+
+        // Reset form
+        setPatientForm({
+          name: "",
+          age: "",
+          gender: "",
+          contact: "",
+          email: "",
+          address: "",
+          emergencyContact: "",
+          height: "",
+          weight: "",
+          bloodPressure: "",
+          medicalHistory: "",
+          currentMedications: "",
+          allergies: "",
+          prakriti: "",
+          vikriti: "",
+          dominantDosha: "",
+          constitutionType: "",
+          healthGoals: "",
+          workSchedule: "",
+          preferredSessionTime: "",
+        });
+      } catch (e: any) {
+        toast(e.message || "Failed to register patient.");
+      }
+    };
+
+    const prakritiOptions = [
+      { value: "vata", label: "Vata" },
+      { value: "pitta", label: "Pitta" },
+      { value: "kapha", label: "Kapha" },
+      { value: "vata_pitta", label: "Vata-Pitta" },
+      { value: "pitta_kapha", label: "Pitta-Kapha" },
+      { value: "vata_kapha", label: "Vata-Kapha" },
+      { value: "tridosha", label: "Tridosha" },
+    ];
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">Patient Management</h2>
+            <p className="text-muted-foreground">Register new patients and manage existing records</p>
+          </div>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>New Patient OPD Registration</CardTitle>
+            <CardDescription>Complete the patient intake details</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Personal Info */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="text-sm font-medium">Full Name</label>
+                <Input value={patientForm.name} onChange={(e) => handleChange("name", e.target.value)} placeholder="John Doe" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Age</label>
+                <Input type="number" value={patientForm.age} onChange={(e) => handleChange("age", e.target.value)} placeholder="35" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Gender</label>
+                <Select value={patientForm.gender} onValueChange={(v) => handleChange("gender", v)}>
+                  <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Contact</label>
+                <Input value={patientForm.contact} onChange={(e) => handleChange("contact", e.target.value)} placeholder="+91-XXXXXXXXXX" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Email (optional)</label>
+                <Input type="email" value={patientForm.email} onChange={(e) => handleChange("email", e.target.value)} placeholder="name@email.com" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Emergency Contact</label>
+                <Input value={patientForm.emergencyContact} onChange={(e) => handleChange("emergencyContact", e.target.value)} placeholder="+91-XXXXXXXXXX" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-sm font-medium">Address</label>
+                <Input value={patientForm.address} onChange={(e) => handleChange("address", e.target.value)} placeholder="Full address" />
+              </div>
+            </div>
+
+            {/* Medical Info */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="text-sm font-medium">Height (cm)</label>
+                <Input type="number" value={patientForm.height} onChange={(e) => handleChange("height", e.target.value)} placeholder="175" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Weight (kg)</label>
+                <Input type="number" value={patientForm.weight} onChange={(e) => handleChange("weight", e.target.value)} placeholder="70" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-sm font-medium">Blood Pressure (optional)</label>
+                <Input value={patientForm.bloodPressure} onChange={(e) => handleChange("bloodPressure", e.target.value)} placeholder="120/80" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-sm font-medium">Medical History (comma separated)</label>
+                <Textarea value={patientForm.medicalHistory} onChange={(e) => handleChange("medicalHistory", e.target.value)} placeholder="Hypertension, Diabetes" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-sm font-medium">Current Medications (comma separated)</label>
+                <Textarea value={patientForm.currentMedications} onChange={(e) => handleChange("currentMedications", e.target.value)} placeholder="Metformin, Amlodipine" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-sm font-medium">Allergies (comma separated)</label>
+                <Textarea value={patientForm.allergies} onChange={(e) => handleChange("allergies", e.target.value)} placeholder="Peanuts, Dust" />
+              </div>
+            </div>
+
+            {/* Ayurvedic Assessment */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="text-sm font-medium">Prakriti</label>
+                <Select value={patientForm.prakriti} onValueChange={(v) => handleChange("prakriti", v)}>
+                  <SelectTrigger><SelectValue placeholder="Select prakriti" /></SelectTrigger>
+                  <SelectContent>
+                    {prakritiOptions.map(p => (
+                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Vikriti (optional)</label>
+                <Select value={patientForm.vikriti} onValueChange={(v) => handleChange("vikriti", v)}>
+                  <SelectTrigger><SelectValue placeholder="Select vikriti" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None</SelectItem>
+                    {prakritiOptions.map(p => (
+                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Dominant Dosha</label>
+                <Input value={patientForm.dominantDosha} onChange={(e) => handleChange("dominantDosha", e.target.value)} placeholder="Vata / Pitta / Kapha" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Constitution Type</label>
+                <Input value={patientForm.constitutionType} onChange={(e) => handleChange("constitutionType", e.target.value)} placeholder="e.g., Vata-Pitta" />
+              </div>
+            </div>
+
+            {/* Goals & Schedule */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2">
+                <label className="text-sm font-medium">Health Goals (comma separated)</label>
+                <Textarea value={patientForm.healthGoals} onChange={(e) => handleChange("healthGoals", e.target.value)} placeholder="Weight management, Stress reduction" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Work Schedule</label>
+                <Input value={patientForm.workSchedule} onChange={(e) => handleChange("workSchedule", e.target.value)} placeholder="9 AM - 6 PM (Mon-Fri)" />
+              </div>
+              <div className="md:col-span-3">
+                <label className="text-sm font-medium">Preferred Session Time</label>
+                <Input value={patientForm.preferredSessionTime} onChange={(e) => handleChange("preferredSessionTime", e.target.value)} placeholder="Morning / Afternoon / Evening" />
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleRegister}>Register Patient</Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Existing Patients */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Existing Patients</CardTitle>
+            <CardDescription>Your registered patients</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="w-full overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Age</TableHead>
+                    <TableHead>Gender</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>BMI</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(patients || []).map((p) => (
+                    <TableRow key={String(p._id)}>
+                      <TableCell>{p.name}</TableCell>
+                      <TableCell>{p.age}</TableCell>
+                      <TableCell className="capitalize">{p.gender}</TableCell>
+                      <TableCell>{p.contact}</TableCell>
+                      <TableCell>{p.bmi} ({p.bmiCategory})</TableCell>
+                      <TableCell>{p.isActive ? "Active" : "Inactive"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {(!patients || patients.length === 0) && (
+                <div className="text-sm text-muted-foreground mt-4">No patients yet.</div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
   const renderContent = () => {
     switch (activeView) {
       case "overview":
@@ -887,33 +1190,7 @@ export default function Dashboard() {
       case "dietitian-management":
         return renderDietitianManagement();
       case "patient-management":
-        return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold">Patient Management</h2>
-                <p className="text-muted-foreground">Register new patients and manage existing records</p>
-              </div>
-            </div>
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-center py-12">
-                  <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Patient Management</h3>
-                  <p className="text-muted-foreground mb-4">
-                    This feature is being implemented. You'll be able to:
-                  </p>
-                  <ul className="text-sm text-muted-foreground space-y-1 max-w-md mx-auto">
-                    <li>• Register new patients with complete OPD forms</li>
-                    <li>• Conduct Ayurvedic body type assessments</li>
-                    <li>• Calculate BMI and health metrics</li>
-                    <li>• Manage patient profiles and medical history</li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return renderPatientManagement();
       default:
         return renderOverview();
     }
