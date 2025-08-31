@@ -7,6 +7,22 @@ const http = httpRouter();
 
 auth.addHttpRoutes(http);
 
+// Add CORS headers and preflight handling
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+// Preflight for send-otp
+http.route({
+  path: "/api/auth/send-otp",
+  method: "OPTIONS",
+  handler: httpAction(async () => {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }),
+});
+
 // Send OTP endpoint
 http.route({
   path: "/api/auth/send-otp",
@@ -24,7 +40,7 @@ http.route({
           }),
           { 
             status: 400,
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json", ...corsHeaders }
           }
         );
       }
@@ -39,7 +55,7 @@ http.route({
           }),
           { 
             status: 400,
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json", ...corsHeaders }
           }
         );
       }
@@ -63,7 +79,7 @@ http.route({
         }),
         { 
           status: 200,
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json", ...corsHeaders }
         }
       );
     } catch (error) {
@@ -75,10 +91,19 @@ http.route({
         }),
         { 
           status: 500,
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json", ...corsHeaders }
         }
       );
     }
+  }),
+});
+
+// Preflight for verify-otp
+http.route({
+  path: "/api/auth/verify-otp",
+  method: "OPTIONS",
+  handler: httpAction(async () => {
+    return new Response(null, { status: 204, headers: corsHeaders });
   }),
 });
 
@@ -99,7 +124,7 @@ http.route({
           }),
           { 
             status: 400,
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json", ...corsHeaders }
           }
         );
       }
@@ -122,7 +147,7 @@ http.route({
         }),
         { 
           status: 200,
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json", ...corsHeaders }
         }
       );
     } catch (error) {
@@ -134,7 +159,7 @@ http.route({
         }),
         { 
           status: 400,
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json", ...corsHeaders }
         }
       );
     }

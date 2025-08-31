@@ -10,7 +10,36 @@ import { toast } from "sonner";
 
 type AuthStep = "email" | "otp" | "success";
 
-const API_BASE = import.meta.env.VITE_CONVEX_URL as string;
+const API_BASE = (import.meta.env.VITE_CONVEX_URL as string) || "";
+
+// Helper: try multiple API bases to avoid 404s when env is misconfigured
+const apiBases: string[] = [];
+if (API_BASE) apiBases.push(API_BASE);
+if (typeof window !== "undefined") {
+  apiBases.push(window.location.origin);
+}
+const uniqueBases = Array.from(new Set(apiBases.map((b) => b.replace(/\/+$/, ""))));
+
+async function postJson(path: string, payload: Record<string, unknown>) {
+  let lastErr: any = null;
+  for (const base of uniqueBases) {
+    const url = `${base}${path}`;
+    try {
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (resp.ok) return resp;
+      // Save details and try next base
+      const text = await resp.text().catch(() => "");
+      lastErr = { status: resp.status, text, url };
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error("No API base available");
+}
 
 export default function PractitionerAuth() {
   const navigate = useNavigate();
@@ -49,30 +78,13 @@ export default function PractitionerAuth() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/api/auth/send-otp`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          userRole: selectedRole,
-        }),
+      const response = await postJson("/api/auth/send-otp", {
+        email,
+        userRole: selectedRole,
       });
 
-      // Robust parsing: read text first; handle non-JSON and non-OK cleanly
+      // Robust parsing: read text first; handle non-JSON cleanly
       const raw = await response.text();
-      if (!response.ok) {
-        console.error("Send OTP failed:", response.status, response.statusText, raw);
-        // Try to extract message from JSON; else show raw or generic
-        let msg = raw;
-        try {
-          const parsed = JSON.parse(raw);
-          msg = parsed?.message || msg;
-        } catch {}
-        toast.error(msg || `Failed to send OTP (${response.status})`);
-        return;
-      }
 
       let data: any;
       try {
@@ -90,7 +102,6 @@ export default function PractitionerAuth() {
         setResendTimer(60);
         toast.success("OTP sent successfully!");
 
-        // Show development OTP in console and toast for testing
         if (data.developmentOtp) {
           console.log("Development OTP:", data.developmentOtp);
           toast.info(`Development OTP: ${data.developmentOtp}`, { duration: 10000 });
@@ -100,7 +111,13 @@ export default function PractitionerAuth() {
       }
     } catch (error) {
       console.error("Send OTP error:", error);
-      toast.error(error instanceof Error ? error.message : "Network error. Please try again.");
+      const msg =
+        error && typeof error === "object" && "status" in (error as any)
+          ? `Failed to send OTP (${(error as any).status})`
+          : error instanceof Error
+          ? error.message
+          : "Network error. Please try again.";
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
@@ -114,30 +131,13 @@ export default function PractitionerAuth() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/api/auth/verify-otp`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          otp,
-          sessionId,
-        }),
+      const response = await postJson("/api/auth/verify-otp", {
+        email,
+        otp,
+        sessionId,
       });
 
-      // Robust parsing: read text first; handle non-JSON and non-OK cleanly
       const raw = await response.text();
-      if (!response.ok) {
-        console.error("Verify OTP failed:", response.status, response.statusText, raw);
-        let msg = raw;
-        try {
-          const parsed = JSON.parse(raw);
-          msg = parsed?.message || msg;
-        } catch {}
-        toast.error(msg || `Failed to verify OTP (${response.status})`);
-        return;
-      }
 
       let data: any;
       try {
@@ -152,11 +152,9 @@ export default function PractitionerAuth() {
         setCurrentStep("success");
         toast.success("Authentication successful!");
 
-        // Store user info in session storage
         sessionStorage.setItem("userId", data.userId);
         sessionStorage.setItem("userRole", data.role);
 
-        // Redirect after a short delay
         setTimeout(() => {
           navigate(data.redirectTo);
         }, 2000);
@@ -165,7 +163,13 @@ export default function PractitionerAuth() {
       }
     } catch (error) {
       console.error("Verify OTP error:", error);
-      toast.error(error instanceof Error ? error.message : "Network error. Please try again.");
+      const msg =
+        error && typeof error === "object" && "status" in (error as any)
+          ? `Failed to verify OTP (${(error as any).status})`
+          : error instanceof Error
+          ? error.message
+          : "Network error. Please try again.";
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
