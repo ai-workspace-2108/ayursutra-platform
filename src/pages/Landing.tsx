@@ -4,9 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
 import { motion } from "framer-motion";
 import { 
-  ArrowRight, 
   CheckCircle, 
-  Heart, 
   Leaf, 
   Shield, 
   Star, 
@@ -129,15 +127,6 @@ export default function Landing() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             >
-              <Button 
-                size="lg" 
-                className="text-lg px-8 py-6"
-                onClick={() => navigate(isAuthenticated ? "/dashboard" : "/auth")}
-              >
-                <Heart className="mr-2 h-5 w-5" />
-                Find a Practitioner
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
               <Button 
                 size="lg" 
                 variant="outline" 
@@ -375,15 +364,6 @@ export default function Landing() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button 
-                    size="lg" 
-                    className="text-lg px-8 py-6"
-                    onClick={() => navigate(isAuthenticated ? "/dashboard" : "/auth")}
-                  >
-                    <Users className="mr-2 h-5 w-5" />
-                    Find Practitioners
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
                   <Button 
                     size="lg" 
                     variant="outline" 

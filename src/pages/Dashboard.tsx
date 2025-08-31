@@ -97,29 +97,6 @@ export default function Dashboard() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              <Card className="h-full">
-                <CardHeader>
-                  <CardTitle>Find Practitioners</CardTitle>
-                  <CardDescription>
-                    Discover verified Ayurvedic practitioners near you
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Browse our network of certified practitioners specializing in various Ayurvedic treatments.
-                  </p>
-                  <Button className="w-full">
-                    Browse Practitioners
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.5 }}
             >
               <Card className="h-full">
