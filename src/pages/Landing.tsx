@@ -92,7 +92,7 @@ export default function Landing() {
                   Dashboard
                 </Button>
               ) : (
-                <Button onClick={() => navigate("/auth")}>
+                <Button onClick={() => navigate("/role-selection")}>
                   Get Started
                 </Button>
               )}
@@ -116,14 +116,14 @@ export default function Landing() {
                         Dashboard
                       </Button>
                     ) : (
-                      <Button className="w-full" onClick={() => navigate("/auth")}>
+                      <Button className="w-full" onClick={() => navigate("/role-selection")}>
                         Get Started
                       </Button>
                     )}
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => navigate("/auth")}
+                      onClick={() => navigate("/role-selection")}
                     >
                       Join as a Practitioner
                     </Button>
@@ -164,7 +164,7 @@ export default function Landing() {
                 size="lg" 
                 variant="outline" 
                 className="text-lg px-8 py-6"
-                onClick={() => navigate("/auth")}
+                onClick={() => navigate("/role-selection")}
               >
                 <Leaf className="mr-2 h-5 w-5" />
                 Join as a Practitioner
@@ -401,7 +401,7 @@ export default function Landing() {
                     size="lg" 
                     variant="outline" 
                     className="text-lg px-8 py-6"
-                    onClick={() => navigate("/auth")}
+                    onClick={() => navigate("/role-selection")}
                   >
                     <MapPin className="mr-2 h-5 w-5" />
                     Join Our Network
