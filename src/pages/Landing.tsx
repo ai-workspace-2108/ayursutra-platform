@@ -11,9 +11,11 @@ import {
   Users, 
   Calendar,
   Award,
-  MapPin
+  MapPin,
+  Menu
 } from "lucide-react";
 import { useNavigate } from "react-router";
+import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 export default function Landing() {
   const { isAuthenticated } = useAuth();
@@ -74,6 +76,7 @@ export default function Landing() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
+            {/* Left: Logo */}
             <div 
               className="flex items-center space-x-3 cursor-pointer"
               onClick={() => navigate("/")}
@@ -81,8 +84,9 @@ export default function Landing() {
               <img src="/logo.svg" alt="AyurSutra" className="h-8 w-8" />
               <span className="text-xl font-bold text-foreground">AyurSutra</span>
             </div>
-            
-            <div className="flex items-center space-x-4">
+
+            {/* Right: Desktop actions */}
+            <div className="hidden sm:flex items-center space-x-4">
               {isAuthenticated ? (
                 <Button onClick={() => navigate("/dashboard")}>
                   Dashboard
@@ -92,6 +96,40 @@ export default function Landing() {
                   Get Started
                 </Button>
               )}
+            </div>
+
+            {/* Mobile menu */}
+            <div className="sm:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon" aria-label="Open menu">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-3/4 sm:max-w-xs">
+                  <SheetHeader>
+                    <SheetTitle>Menu</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6 grid gap-3">
+                    {isAuthenticated ? (
+                      <Button className="w-full" onClick={() => navigate("/dashboard")}>
+                        Dashboard
+                      </Button>
+                    ) : (
+                      <Button className="w-full" onClick={() => navigate("/auth")}>
+                        Get Started
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => navigate("/auth")}
+                    >
+                      Join as a Practitioner
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>
