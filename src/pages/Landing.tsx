@@ -88,14 +88,9 @@ export default function Landing() {
                   Dashboard
                 </Button>
               ) : (
-                <>
-                  <Button variant="ghost" onClick={() => navigate("/auth")}>
-                    Sign In
-                  </Button>
-                  <Button onClick={() => navigate("/auth")}>
-                    Sign Up
-                  </Button>
-                </>
+                <Button onClick={() => navigate("/auth")}>
+                  Get Started
+                </Button>
               )}
             </div>
           </div>
