@@ -17,6 +17,7 @@ import type * as auth_emailOtp from "../auth/emailOtp.js";
 import type * as auth from "../auth.js";
 import type * as dev from "../dev.js";
 import type * as http from "../http.js";
+import type * as practitioner_auth_logic from "../practitioner_auth_logic.js";
 import type * as users from "../users.js";
 
 /**
@@ -32,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   dev: typeof dev;
   http: typeof http;
+  practitioner_auth_logic: typeof practitioner_auth_logic;
   users: typeof users;
 }>;
 export declare const api: FilterApi<
