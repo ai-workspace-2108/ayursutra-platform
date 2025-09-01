@@ -1204,7 +1204,7 @@ export default function Dashboard() {
             </div>
 
             <div className="flex justify-end">
-              <Button onClick={handleRegister} disabled={authLoading || !isAuthenticated || !user?._id}>Register Patient</Button>
+              <Button onClick={handleRegister} disabled={authLoading}>Register Patient</Button>
             </div>
           </CardContent>
         </Card>
