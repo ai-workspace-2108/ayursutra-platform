@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 interface Role {
   id: string;
@@ -21,6 +23,7 @@ interface Role {
 
 export default function RoleSelection() {
   const navigate = useNavigate();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
   const roles: Role[] = [
@@ -66,6 +69,36 @@ export default function RoleSelection() {
       }
     }
   };
+
+  // Add verification: redirect unauthenticated users to /auth
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate("/auth");
+    }
+  }, [authLoading, isAuthenticated, navigate]);
+
+  // Loading guard while auth state is resolving
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-muted-foreground text-sm">Checking your session...</div>
+      </div>
+    );
+  }
+
+  // If not authenticated (during brief transition), show a minimal friendly prompt
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="space-y-4 text-center">
+          <p className="text-sm text-muted-foreground">Redirecting to sign in…</p>
+          <Button variant="outline" onClick={() => navigate("/auth")}>
+            Go to Sign In
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
