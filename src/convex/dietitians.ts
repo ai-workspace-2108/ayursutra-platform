@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 // Get all dietitians
 export const getAllDietitians = query({
@@ -135,5 +136,48 @@ export const updateAssignmentStatus = mutation({
     }
 
     return args.assignmentId;
+  },
+});
+
+// Add: Register current user as dietitian if missing, mark available
+export const registerSelfIfMissing = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const authUserId = await getAuthUserId(ctx);
+    if (!authUserId) {
+      throw new Error("Not authenticated");
+    }
+
+    const existing = await ctx.db
+      .query("dietitians")
+      .withIndex("by_userId", (q) => q.eq("userId", authUserId))
+      .unique();
+
+    if (existing) {
+      if (!existing.isAvailable) {
+        await ctx.db.patch(existing._id, { isAvailable: true });
+      }
+      return existing._id;
+    }
+
+    const user = await ctx.db.get(authUserId);
+    const name = user?.name ?? "Dietitian";
+    const contact = user?.email ?? "N/A";
+
+    const _id = await ctx.db.insert("dietitians", {
+      userId: authUserId,
+      name,
+      specialization: ["General Nutrition"],
+      experience: 0,
+      bio: "—",
+      contact,
+      isAvailable: true,
+      imageUrl: undefined,
+      rating: undefined,
+      maxPatientsPerDay: 10,
+      currentPatientCount: 0,
+    });
+
+    return _id;
   },
 });

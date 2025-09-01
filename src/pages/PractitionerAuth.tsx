@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 export default function PractitionerAuth() {
   const navigate = useNavigate();
   const registerTherapist = useMutation(api.therapists.registerSelfIfMissing);
+  const registerDietitian = useMutation(api.dietitians.registerSelfIfMissing);
 
   useEffect(() => {
     // Read selection from RoleSelection
@@ -20,6 +21,19 @@ export default function PractitionerAuth() {
           // Non-blocking: if registration fails, continue navigation
         } finally {
           navigate("/therapist-dashboard", { replace: true });
+        }
+      })();
+      return;
+    }
+
+    // Add: handle dietician role -> register and redirect
+    if (selectedRole === "dietician") {
+      (async () => {
+        try {
+          await registerDietitian({});
+        } catch {
+        } finally {
+          navigate("/dietitian-dashboard", { replace: true });
         }
       })();
       return;
