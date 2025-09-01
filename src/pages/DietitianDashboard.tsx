@@ -338,6 +338,9 @@ Work Schedule: ${p.workSchedule}; Preferred Session Time: ${p.preferredSessionTi
                   />
                   <div className="flex gap-2 mt-3">
                     <Button onClick={handleSavePlan}>Save & Activate</Button>
+                    <Button variant="outline" onClick={handleSavePlan}>
+                      Add to Active Plan
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
