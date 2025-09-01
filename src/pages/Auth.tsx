@@ -33,10 +33,11 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      const redirect = redirectAfterAuth || "/";
+      const redirect = redirectAfterAuth || "/role-selection";
       navigate(redirect);
     }
   }, [authLoading, isAuthenticated, navigate, redirectAfterAuth]);
+
   const handleEmailSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
@@ -67,7 +68,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
 
       console.log("signed in");
 
-      const redirect = redirectAfterAuth || "/";
+      const redirect = redirectAfterAuth || "/role-selection";
       navigate(redirect);
     } catch (error) {
       console.error("OTP verification error:", error);
@@ -86,7 +87,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       console.log("Attempting anonymous sign in...");
       await signIn("anonymous");
       console.log("Anonymous sign in successful");
-      const redirect = redirectAfterAuth || "/";
+      const redirect = redirectAfterAuth || "/role-selection";
       navigate(redirect);
     } catch (error) {
       console.error("Guest login error:", error);
