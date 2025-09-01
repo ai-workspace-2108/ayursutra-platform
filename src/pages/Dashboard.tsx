@@ -34,7 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 type DashboardView = "overview" | "therapist-management" | "dietitian-management" | "patient-management";
 
 export default function Dashboard() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState<DashboardView>("therapist-management");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -909,8 +909,13 @@ export default function Dashboard() {
 
     const handleRegister = async () => {
       try {
-        if (!user?._id) {
-          toast("Please sign in again.");
+        // Guard: ensure auth is ready and user has a valid session
+        if (authLoading) {
+          toast("Authentication is loading. Please wait a moment...");
+          return;
+        }
+        if (!isAuthenticated || !user?._id) {
+          toast("Your session is not active. Please sign in again.");
           return;
         }
 
@@ -1097,10 +1102,10 @@ export default function Dashboard() {
               </div>
               <div>
                 <label className="text-sm font-medium">Vikriti (optional)</label>
-                <Select value={patientForm.vikriti} onValueChange={(v) => handleChange("vikriti", v)}>
+                <Select value={patientForm.vikriti} onValueChange={(v) => handleChange("vikriti", v === "none" ? "" : v)}>
                   <SelectTrigger><SelectValue placeholder="Select vikriti" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {prakritiOptions.map(p => (
                       <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
                     ))}
@@ -1134,7 +1139,7 @@ export default function Dashboard() {
             </div>
 
             <div className="flex justify-end">
-              <Button onClick={handleRegister}>Register Patient</Button>
+              <Button onClick={handleRegister} disabled={authLoading || !isAuthenticated || !user?._id}>Register Patient</Button>
             </div>
           </CardContent>
         </Card>
