@@ -967,6 +967,71 @@ export default function Dashboard() {
 
         toast("Patient registered successfully.");
 
+        // BEGIN: Mirror saved patient data into localStorage
+        try {
+          const heightNum = Number(patientForm.height);
+          const weightNum = Number(patientForm.weight);
+          const heightInMeters = heightNum / 100;
+          const bmiCalc = weightNum && heightInMeters ? (weightNum / (heightInMeters * heightInMeters)) : 0;
+          const bmiRounded = Math.round(bmiCalc * 10) / 10;
+          let bmiCategory = "";
+          if (bmiRounded < 18.5) bmiCategory = "Underweight";
+          else if (bmiRounded < 25) bmiCategory = "Normal";
+          else if (bmiRounded < 30) bmiCategory = "Overweight";
+          else bmiCategory = "Obese";
+
+          const patientLocal = {
+            // Personal Information
+            name: patientForm.name.trim(),
+            age: Number(patientForm.age),
+            gender: patientForm.gender,
+            contact: patientForm.contact.trim(),
+            email: patientForm.email.trim() || undefined,
+            address: patientForm.address.trim(),
+            emergencyContact: patientForm.emergencyContact.trim(),
+
+            // Medical
+            height: heightNum,
+            weight: weightNum,
+            bloodPressure: patientForm.bloodPressure.trim() || undefined,
+            medicalHistory: toArray(patientForm.medicalHistory),
+            currentMedications: toArray(patientForm.currentMedications),
+            allergies: toArray(patientForm.allergies),
+
+            // Ayurvedic
+            prakriti: patientForm.prakriti,
+            vikriti: (patientForm.vikriti.trim() ? patientForm.vikriti : undefined),
+            dominantDosha: patientForm.dominantDosha.trim(),
+            constitutionType: patientForm.constitutionType.trim(),
+
+            // Goals & Schedule
+            healthGoals: toArray(patientForm.healthGoals),
+            workSchedule: patientForm.workSchedule.trim(),
+            preferredSessionTime: patientForm.preferredSessionTime.trim(),
+
+            // Derived
+            bmi: bmiRounded,
+            bmiCategory,
+            isActive: true,
+
+            // Links
+            doctorId: String(user._id),
+            assignedTherapistId: undefined,
+            assignedDietitianId: undefined,
+          };
+
+          const key = `patients_${String(user._id)}`;
+          const existingRaw = localStorage.getItem(key);
+          const existingArr: Array<any> = existingRaw ? JSON.parse(existingRaw) : [];
+          const updatedArr: Array<any> = [patientLocal, ...existingArr];
+
+          localStorage.setItem(key, JSON.stringify(updatedArr));
+          localStorage.setItem("last_registered_patient", JSON.stringify(patientLocal));
+        } catch {
+          // non-blocking localStorage failure; no-op
+        }
+        // END: Mirror saved patient data into localStorage
+
         // Reset form
         setPatientForm({
           name: "",
