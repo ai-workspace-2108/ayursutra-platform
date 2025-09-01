@@ -33,8 +33,8 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      const redirect = redirectAfterAuth || "/role-selection";
-      navigate(redirect);
+      // Force post-auth flow to role selection
+      navigate("/role-selection");
     }
   }, [authLoading, isAuthenticated, navigate, redirectAfterAuth]);
 
@@ -68,8 +68,8 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
 
       console.log("signed in");
 
-      const redirect = redirectAfterAuth || "/role-selection";
-      navigate(redirect);
+      // Force post-OTP flow to role selection
+      navigate("/role-selection");
     } catch (error) {
       console.error("OTP verification error:", error);
 
@@ -87,8 +87,8 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       console.log("Attempting anonymous sign in...");
       await signIn("anonymous");
       console.log("Anonymous sign in successful");
-      const redirect = redirectAfterAuth || "/role-selection";
-      navigate(redirect);
+      // Force post-guest flow to role selection
+      navigate("/role-selection");
     } catch (error) {
       console.error("Guest login error:", error);
       console.error("Error details:", JSON.stringify(error, null, 2));
