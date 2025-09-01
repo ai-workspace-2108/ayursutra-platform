@@ -181,3 +181,52 @@ export const registerSelfIfMissing = mutation({
     return _id;
   },
 });
+
+export const getMyDietitian = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+    const me = await ctx.db
+      .query("dietitians")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .unique();
+    if (!me) return null;
+    return {
+      _id: me._id,
+      name: me.name,
+      currentPatientCount: me.currentPatientCount,
+      maxPatientsPerDay: me.maxPatientsPerDay,
+    };
+  },
+});
+
+export const updateDietitianName = mutation({
+  args: {
+    dietitianId: v.id("dietitians"),
+    name: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const doc = await ctx.db.get(args.dietitianId);
+    if (!doc) throw new Error("Dietitian not found");
+    await ctx.db.patch(args.dietitianId, { name: args.name });
+    return args.dietitianId;
+  },
+});
+
+export const setDietPlan = mutation({
+  args: {
+    assignmentId: v.id("dietitian_assignments"),
+    plan: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const a = await ctx.db.get(args.assignmentId);
+    if (!a) throw new Error("Assignment not found");
+    await ctx.db.patch(args.assignmentId, {
+      dietPlan: args.plan,
+      notes: a.notes,
+      status: "active",
+    });
+    return args.assignmentId;
+  },
+});
