@@ -30,6 +30,7 @@ import { useMutation } from "convex/react";
 import { generateTimeSlots, formatDate } from "@/lib/utils";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type DashboardView = "overview" | "therapist-management" | "dietitian-management" | "patient-management";
 
@@ -45,6 +46,7 @@ export default function Dashboard() {
   const [selectedPatientForDietitianId, setSelectedPatientForDietitianId] = useState<string>("");
   const [selectedDietitianIdDM, setSelectedDietitianIdDM] = useState<string>("");
   const [dietitianNotes, setDietitianNotes] = useState<string>("");
+  const [profilePatientId, setProfilePatientId] = useState<string | null>(null);
   const [patientForm, setPatientForm] = useState({
     name: "",
     age: "",
@@ -588,6 +590,8 @@ export default function Dashboard() {
       );
     });
 
+    const profilePatient = (patients || []).find((p) => String(p._id) === profilePatientId);
+
     const handleAssignDietitian = async () => {
       try {
         if (!user?._id) {
@@ -714,9 +718,7 @@ export default function Dashboard() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() =>
-                            setSelectedPatientForDietitianId(String(p._id))
-                          }
+                          onClick={() => setProfilePatientId(String(p._id))}
                         >
                           View Full Profile
                         </Button>
@@ -800,6 +802,48 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Profile Modal */}
+        <Dialog open={!!profilePatientId} onOpenChange={(open) => !open && setProfilePatientId(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Patient Profile</DialogTitle>
+              <DialogDescription>Full details for the selected patient</DialogDescription>
+            </DialogHeader>
+            {profilePatient ? (
+              <div className="space-y-3 text-sm">
+                <div className="font-medium text-base">{profilePatient.name}</div>
+                <div className="text-muted-foreground">
+                  {profilePatient.age} • {profilePatient.gender}
+                </div>
+                <div>Contact: {profilePatient.contact}</div>
+                {profilePatient.email && <div>Email: {profilePatient.email}</div>}
+                <div>BMI: {profilePatient.bmi} ({profilePatient.bmiCategory})</div>
+                <div>Dominant Dosha: {profilePatient.dominantDosha}</div>
+                <div>Prakriti: {profilePatient.prakriti}</div>
+                {profilePatient.vikriti && <div>Vikriti: {profilePatient.vikriti}</div>}
+                <div>
+                  Health Goals:{" "}
+                  {profilePatient.healthGoals && profilePatient.healthGoals.length
+                    ? profilePatient.healthGoals.join(", ")
+                    : "—"}
+                </div>
+                <div>
+                  Allergies:{" "}
+                  {profilePatient.allergies && profilePatient.allergies.length
+                    ? profilePatient.allergies.join(", ")
+                    : "None"}
+                </div>
+                <div>Address: {profilePatient.address}</div>
+                <div>Emergency Contact: {profilePatient.emergencyContact}</div>
+                {profilePatient.bloodPressure && <div>BP: {profilePatient.bloodPressure}</div>}
+                <div>Height: {profilePatient.height} cm • Weight: {profilePatient.weight} kg</div>
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">No patient selected.</div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Transfer details / Confirmation */}
         <Card>
