@@ -8,6 +8,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
+import { useNavigate } from "react-router";
 
 type AssignmentWithPatient = {
   _id: string;
@@ -48,6 +50,14 @@ export default function DietitianDashboard() {
 
   const setDietPlan = useMutation(api.dietitians.setDietPlan);
   const generatePlan = useAction(api.dietPlans.generateDietPlan);
+
+  // Add sign out handler and navigation
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+  async function handleSignOut() {
+    await signOut();
+    navigate("/");
+  }
 
   // Load all assignments for this dietitian (status active) and split into pending/active by dietPlan presence
   const assignments = useQuery(
@@ -155,13 +165,19 @@ Work Schedule: ${p.workSchedule}; Preferred Session Time: ${p.preferredSessionTi
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold">
-            Dietitian Dashboard{me?.name ? ` - ${me.name}` : ""}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Manage diet plans, review OPD data, and coordinate care.
-          </p>
+        {/* Header with Sign Out */}
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">
+              Dietitian Dashboard{me?.name ? ` - ${me.name}` : ""}
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Manage diet plans, review OPD data, and coordinate care.
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleSignOut}>
+            Sign Out
+          </Button>
         </div>
 
         {/* Overview Section */}

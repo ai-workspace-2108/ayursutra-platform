@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Calendar, Clock, CheckCircle2, AlertTriangle, Activity, Users, Briefcase, ArrowLeft } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router";
 import { motion } from "framer-motion";
 
 export default function TherapistDashboard() {
+  const { signOut } = useAuth();
   const navigate = useNavigate();
   const today = new Date();
   const formatted = today.toLocaleDateString(undefined, {
@@ -17,6 +19,11 @@ export default function TherapistDashboard() {
     month: "long",
     day: "numeric",
   });
+
+  async function handleSignOut() {
+    await signOut();
+    navigate("/");
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -40,12 +47,21 @@ export default function TherapistDashboard() {
         </div>
       </motion.nav>
 
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleSignOut}
+        className="fixed top-4 right-4 z-50"
+      >
+        Sign Out
+      </Button>
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Overview header */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle>Today’s Therapy Schedule</CardTitle>
+              <CardTitle>Today's Therapy Schedule</CardTitle>
               <CardDescription>{formatted}</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-4">
