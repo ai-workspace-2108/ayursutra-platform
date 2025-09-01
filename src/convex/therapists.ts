@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 // Get all therapists
 export const getAllTherapists = query({
@@ -187,6 +188,52 @@ export const updateSessionStatus = mutation({
     });
 
     return args.sessionId;
+  },
+});
+
+// Register the current authenticated user as a therapist if missing.
+// If already exists, ensure they are marked available.
+export const registerSelfIfMissing = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const authUserId = await getAuthUserId(ctx);
+    if (!authUserId) {
+      throw new Error("Not authenticated");
+    }
+
+    // Check if therapist already exists for this user
+    const existing = await ctx.db
+      .query("therapists")
+      .withIndex("by_userId", (q) => q.eq("userId", authUserId))
+      .unique();
+
+    if (existing) {
+      if (!existing.isAvailable) {
+        await ctx.db.patch(existing._id, { isAvailable: true });
+      }
+      return existing._id;
+    }
+
+    // Pull minimal user details for defaults
+    const user = await ctx.db.get(authUserId);
+    const name = user?.name ?? "Therapist";
+    const contact = user?.email ?? "N/A";
+
+    const _id = await ctx.db.insert("therapists", {
+      userId: authUserId,
+      name,
+      specialization: ["General"],
+      experience: 0,
+      bio: "—",
+      contact,
+      isAvailable: true,
+      imageUrl: undefined,
+      rating: undefined,
+      totalSessions: 0,
+      hourlyRate: undefined,
+    });
+
+    return _id;
   },
 });
 
