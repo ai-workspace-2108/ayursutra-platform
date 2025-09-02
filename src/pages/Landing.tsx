@@ -88,13 +88,23 @@ export default function Landing() {
             {/* Right: Desktop actions */}
             <div className="hidden sm:flex items-center space-x-4">
               {isAuthenticated ? (
-                <Button onClick={() => navigate("/dashboard")}>
-                  Dashboard
-                </Button>
+                <>
+                  <Button onClick={() => navigate("/dashboard")}>
+                    Dashboard
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate("/about")}>
+                    About
+                  </Button>
+                </>
               ) : (
-                <Button onClick={() => navigate("/role-selection")}>
-                  Get Started
-                </Button>
+                <>
+                  <Button onClick={() => navigate("/role-selection")}>
+                    Get Started
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate("/about")}>
+                    About
+                  </Button>
+                </>
               )}
             </div>
 
