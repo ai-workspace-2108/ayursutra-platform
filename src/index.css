@@ -170,3 +170,34 @@
 .sidebar-nav {
   background: linear-gradient(180deg, var(--sidebar) 0%, oklch(0.96 0.008 150) 100%);
 }
+
+/* Ayurvedic background: subtle repeating pattern + soft radial glows */
+.ayur-bg {
+  position: relative;
+  isolation: isolate; /* keeps pseudo-elements contained */
+  background:
+    radial-gradient(1200px 600px at -10% 0%, oklch(0.985 0.01 150) 0%, transparent 60%),
+    radial-gradient(1000px 500px at 110% 10%, oklch(0.98 0.012 150) 0%, transparent 60%);
+}
+
+.ayur-bg::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("/logo_bg.svg");
+  background-repeat: repeat;
+  background-size: 320px 320px;
+  opacity: 0.05; /* very subtle pattern */
+  pointer-events: none;
+  z-index: -1;
+}
+
+.dark .ayur-bg {
+  background:
+    radial-gradient(900px 450px at -10% 0%, oklch(0.16 0.012 150) 0%, transparent 60%),
+    radial-gradient(800px 400px at 110% 10%, oklch(0.14 0.012 150) 0%, transparent 60%);
+}
+
+.dark .ayur-bg::after {
+  opacity: 0.04;
+}

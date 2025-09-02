@@ -66,7 +66,25 @@ export default function Landing() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background ayur-bg relative overflow-hidden">
+      {/* Decorative soft green glows for Ayurvedic ambiance */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-24 -left-24 h-[38rem] w-[38rem] rounded-full blur-3xl opacity-25"
+        style={{
+          background:
+            "radial-gradient(closest-side, oklch(0.9 0.08 150), transparent 70%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-24 -right-24 h-[34rem] w-[34rem] rounded-full blur-3xl opacity-20"
+        style={{
+          background:
+            "radial-gradient(closest-side, oklch(0.88 0.07 130), transparent 70%)",
+        }}
+      />
+
       {/* Navigation */}
       <motion.nav
         initial={{ opacity: 0, y: -20 }}
