@@ -66,7 +66,7 @@ export default function Landing() {
   ];
 
   return (
-    <div className="min-h-screen bg-background ayur-bg relative overflow-hidden">
+    <div className="min-h-screen bg-background ayur-bg photo-landing relative overflow-hidden">
       {/* Decorative soft green glows for Ayurvedic ambiance */}
       <div
         aria-hidden
@@ -90,7 +90,7 @@ export default function Landing() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-border"
+        className="fixed top-0 w-full z-50 bg-background/70 backdrop-blur-md border-b border-border"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -198,7 +198,7 @@ export default function Landing() {
             >
               <div className="relative max-w-4xl mx-auto">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-3xl blur-3xl"></div>
-                <div className="relative bg-card border rounded-3xl p-8 shadow-2xl">
+                <div className="relative border rounded-3xl p-8 shadow-2xl bg-card/80 backdrop-blur-md glass-hero">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                     <div className="space-y-2">
                       <div className="text-3xl font-bold text-primary">500+</div>
@@ -320,7 +320,7 @@ export default function Landing() {
                   transition={{ duration: 0.8, delay: index * 0.1 }}
                   viewport={{ once: true }}
                 >
-                  <Card className="h-full text-center hover:shadow-lg transition-shadow duration-300">
+                  <Card className="h-full text-center hover:shadow-lg transition-shadow duration-300 glass-card">
                     <CardHeader>
                       <div className="mx-auto w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                         <feature.icon className="w-6 h-6 text-primary" />
@@ -368,7 +368,7 @@ export default function Landing() {
                   transition={{ duration: 0.8, delay: index * 0.1 }}
                   viewport={{ once: true }}
                 >
-                  <Card className="h-full">
+                  <Card className="h-full glass-card">
                     <CardHeader>
                       <div className="flex items-center space-x-1 mb-2">
                         {[...Array(testimonial.rating)].map((_, i) => (
@@ -403,7 +403,7 @@ export default function Landing() {
             viewport={{ once: true }}
             className="text-center space-y-8"
           >
-            <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
+            <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20 glass-card">
               <CardHeader className="space-y-6 pb-8">
                 <div className="space-y-4">
                   <h2 className="text-3xl sm:text-4xl font-bold text-foreground">

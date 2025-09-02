@@ -201,3 +201,62 @@
 .dark .ayur-bg::after {
   opacity: 0.04;
 }
+
+/* Ayurvedic photo background for landing page */
+.photo-landing {
+  position: relative;
+  background-image: url("/assets/ChatGPT_Image_Sep_2__2025__08_24_19_AM.png");
+  background-size: cover;
+  background-position: center center;
+  background-attachment: fixed;
+  /* Fallback color under the image */
+  background-color: oklch(0.985 0.005 150);
+}
+
+.photo-landing::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  /* Soft gradient overlay for readability over the image */
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--background) 82%, transparent) 0%,
+      color-mix(in oklab, var(--background) 64%, transparent) 40%,
+      color-mix(in oklab, var(--background) 72%, transparent) 100%
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dark .photo-landing::before {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--background) 86%, transparent) 0%,
+      color-mix(in oklab, var(--background) 70%, transparent) 40%,
+      color-mix(in oklab, var(--background) 78%, transparent) 100%
+    );
+}
+
+/* Lift content above the overlay */
+.photo-landing > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Optional: enhance glass morphism on cards over photo */
+.glass-card {
+  background: color-mix(in oklab, var(--card) 78%, transparent);
+  backdrop-filter: saturate(1.1) blur(8px);
+  -webkit-backdrop-filter: saturate(1.1) blur(8px);
+  border-color: color-mix(in oklab, var(--border) 70%, transparent);
+}
+
+/* Optional: stronger glass for hero highlight */
+.glass-hero {
+  background: color-mix(in oklab, var(--card) 72%, transparent);
+  backdrop-filter: saturate(1.2) blur(10px);
+  -webkit-backdrop-filter: saturate(1.2) blur(10px);
+  border-color: color-mix(in oklab, var(--border) 65%, transparent);
+}
