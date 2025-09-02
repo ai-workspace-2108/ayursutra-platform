@@ -1352,13 +1352,13 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="flex">
+      <div className="flex flex-col md:flex-row">
         {/* Sidebar */}
         <motion.aside
           initial={{ x: -300 }}
           animate={{ x: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-64 min-h-screen sidebar-nav border-r"
+          className="w-full md:w-64 md:min-h-screen sidebar-nav border-b md:border-b-0 md:border-r"
         >
           <nav className="p-4 space-y-2">
             {sidebarItems.map((item, index) => {
