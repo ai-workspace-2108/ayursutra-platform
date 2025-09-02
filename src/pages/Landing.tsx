@@ -16,10 +16,12 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useState } from "react";
 
 export default function Landing() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const features = [
     {
@@ -110,7 +112,7 @@ export default function Landing() {
 
             {/* Mobile menu */}
             <div className="sm:hidden">
-              <Sheet>
+              <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                 <SheetTrigger asChild>
                   <Button variant="outline" size="icon" aria-label="Open menu">
                     <Menu className="h-5 w-5" />
@@ -122,20 +124,49 @@ export default function Landing() {
                   </SheetHeader>
                   <div className="mt-6 grid gap-3">
                     {isAuthenticated ? (
-                      <Button className="w-full" onClick={() => navigate("/dashboard")}>
+                      <Button
+                        className="w-full"
+                        onClick={() => {
+                          navigate("/dashboard");
+                          setMobileOpen(false);
+                        }}
+                        aria-label="Go to Dashboard"
+                      >
                         Dashboard
                       </Button>
                     ) : (
-                      <Button className="w-full" onClick={() => navigate("/role-selection")}>
+                      <Button
+                        className="w-full"
+                        onClick={() => {
+                          navigate("/role-selection");
+                          setMobileOpen(false);
+                        }}
+                        aria-label="Get Started"
+                      >
                         Get Started
                       </Button>
                     )}
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => navigate("/role-selection")}
+                      onClick={() => {
+                        navigate("/role-selection");
+                        setMobileOpen(false);
+                      }}
+                      aria-label="Join as a Practitioner"
                     >
                       Join as a Practitioner
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        navigate("/about");
+                        setMobileOpen(false);
+                      }}
+                      aria-label="About AyurSutra"
+                    >
+                      About
                     </Button>
                   </div>
                 </SheetContent>
