@@ -341,8 +341,7 @@ export default function Dashboard() {
     };
 
     const busyTherapistIds = new Set(slotOccupancy?.busyTherapistIds?.map(String) || []);
-    const selectedTherapistName =
-      (allTherapists || []).find((t) => String(t._id) === selectedTherapistId)?.name || "";
+    // removed: selected therapist name display logic (reverted to pre-deploy state)
 
     return (
       <div className="space-y-6">
@@ -449,8 +448,7 @@ export default function Dashboard() {
                   </SelectContent>
                 </Select>
 
-                <label className="text-sm font-medium mt-4 block">Selected Therapist</label>
-                <Input readOnly value={selectedTherapistName || "—"} />
+                {/* removed: Selected Therapist display field (reverted to pre-deploy state) */}
 
                 <div className="mt-6">
                   <Button className="w-full" onClick={handleAssign}>
