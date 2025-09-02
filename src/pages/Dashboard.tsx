@@ -341,6 +341,8 @@ export default function Dashboard() {
     };
 
     const busyTherapistIds = new Set(slotOccupancy?.busyTherapistIds?.map(String) || []);
+    const selectedTherapistName =
+      (allTherapists || []).find((t) => String(t._id) === selectedTherapistId)?.name || "";
 
     return (
       <div className="space-y-6">
@@ -463,6 +465,8 @@ export default function Dashboard() {
                 <Input readOnly value={format(selectedDate, "PP")} />
                 <label className="text-sm font-medium mt-4">Selected Slot</label>
                 <Input readOnly value={selectedTimeSlot} />
+                <label className="text-sm font-medium mt-4">Selected Therapist</label>
+                <Input readOnly value={selectedTherapistName || "None selected"} />
               </div>
             </div>
 

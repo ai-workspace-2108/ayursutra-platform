@@ -8,6 +8,8 @@ import { Calendar, Clock, CheckCircle2, AlertTriangle, Activity, Users, Briefcas
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router";
 import { motion } from "framer-motion";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useEffect, useState } from "react";
 
 export default function TherapistDashboard() {
   const { signOut } = useAuth();
@@ -19,6 +21,21 @@ export default function TherapistDashboard() {
     month: "long",
     day: "numeric",
   });
+  const [therapistName, setTherapistName] = useState<string>("");
+  const [tempName, setTempName] = useState<string>("");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("therapist_name") || "";
+    setTherapistName(saved);
+    setTempName(saved);
+  }, []);
+
+  function handleSaveName() {
+    const n = tempName.trim();
+    if (!n) return;
+    localStorage.setItem("therapist_name", n);
+    setTherapistName(n);
+  }
 
   async function handleSignOut() {
     await signOut();
@@ -40,8 +57,10 @@ export default function TherapistDashboard() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-3">
-              <img src="/logo.svg" alt="AyurSutra" className="h-7 w-7" />
-              <span className="font-semibold text-lg">Therapist Dashboard</span>
+              <img src="/assets/ChatGPT_Image_Sep_2__2025__08_48_00_AM.png" alt="AyurSutra" className="h-7 w-7" />
+              <span className="font-semibold text-lg">
+                {therapistName ? `${therapistName} — Therapist Dashboard` : "Therapist Dashboard"}
+              </span>
             </div>
           </div>
         </div>
@@ -269,6 +288,25 @@ export default function TherapistDashboard() {
             </TabsContent>
           </Tabs>
         </motion.div>
+
+        {/* Name capture dialog */}
+        <Dialog open={!therapistName}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Welcome! What's your name?</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <Input
+                placeholder="Enter your name"
+                value={tempName}
+                onChange={(e) => setTempName(e.target.value)}
+              />
+              <Button className="w-full" onClick={handleSaveName} disabled={!tempName.trim()}>
+                Continue
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
