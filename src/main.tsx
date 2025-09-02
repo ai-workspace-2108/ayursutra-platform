@@ -16,6 +16,7 @@ import Dashboard from "./pages/Dashboard.tsx";
 import "./types/global.d.ts";
 import TherapistDashboard from "./pages/TherapistDashboard.tsx";
 import DietitianDashboard from "./pages/DietitianDashboard.tsx";
+import About from "./pages/About.tsx";
 
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 
@@ -51,6 +52,7 @@ createRoot(document.getElementById("root")!).render(
           <RouteSyncer />
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/about" element={<About />} />
             <Route path="/role-selection" element={<RoleSelection />} />
             <Route path="/practitioner-auth" element={<PractitionerAuth />} />
             <Route path="/auth" element={<AuthPage redirectAfterAuth="/dashboard" />} />
