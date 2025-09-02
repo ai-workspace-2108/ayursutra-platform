@@ -449,6 +449,9 @@ export default function Dashboard() {
                   </SelectContent>
                 </Select>
 
+                <label className="text-sm font-medium mt-4 block">Selected Therapist</label>
+                <Input readOnly value={selectedTherapistName || "—"} />
+
                 <div className="mt-6">
                   <Button className="w-full" onClick={handleAssign}>
                     Assign Session
