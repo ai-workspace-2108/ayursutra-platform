@@ -292,73 +292,121 @@ Work Schedule: ${p.workSchedule}; Preferred Session Time: ${p.preferredSessionTi
 
       {/* Name Dialog */}
       <Dialog open={nameDialogOpen} onOpenChange={setNameDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Enter Your Name</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Please enter your full name to display in the doctor dashboard.
-            </p>
-            <Input
-              placeholder="e.g., Sarah Johnson, RD"
-              value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
-            />
-          </div>
-          <DialogFooter>
-            <Button onClick={handleSaveName}>Save</Button>
-          </DialogFooter>
+        <DialogContent className="bg-card/95 backdrop-blur-md border-border/60 shadow-2xl">
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="space-y-4"
+          >
+            <DialogHeader>
+              <DialogTitle>Enter Your Name</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Please enter your full name to display in the doctor dashboard.
+              </p>
+              <Input
+                placeholder="e.g., Sarah Johnson, RD"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+              />
+            </div>
+            <DialogFooter>
+              <Button onClick={handleSaveName}>Save</Button>
+            </DialogFooter>
+          </motion.div>
         </DialogContent>
       </Dialog>
 
       {/* OPD + Plan Review Dialog */}
-      <Dialog open={!!selectedAssignment} onOpenChange={(o) => {
-        if (!o) { setSelectedAssignment(null); setPreviewPlan(""); }
-      }}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>OPD Review & Plan</DialogTitle>
-          </DialogHeader>
+      <Dialog
+        open={!!selectedAssignment}
+        onOpenChange={(o) => {
+          if (!o) {
+            setSelectedAssignment(null);
+            setPreviewPlan("");
+          }
+        }}
+      >
+        <DialogContent className="max-w-3xl bg-card/95 backdrop-blur-md border-border/60 shadow-2xl">
+          <motion.div
+            initial={{ opacity: 0, y: 14, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.28, ease: "easeOut" }}
+            className="space-y-4"
+          >
+            <DialogHeader>
+              <DialogTitle>OPD Review & Plan</DialogTitle>
+            </DialogHeader>
 
-          {selectedAssignment && (
-            <div className="grid grid-cols-1 gap-4">
-              <Card>
-                <CardHeader><CardTitle>Patient OPD Data</CardTitle></CardHeader>
-                <CardContent className="text-sm space-y-2">
-                  <div><strong>Name:</strong> {selectedAssignment.patient?.name}</div>
-                  <div>
-                    <strong>Demographics:</strong> {selectedAssignment.patient?.age}y • {selectedAssignment.patient?.gender}
-                  </div>
-                  <div>
-                    <strong>Anthropometrics:</strong> {selectedAssignment.patient?.height}cm • {selectedAssignment.patient?.weight}kg • BMI {selectedAssignment.patient?.bmi} ({selectedAssignment.patient?.bmiCategory})
-                  </div>
-                  <div><strong>Constitution:</strong> {selectedAssignment.patient?.prakriti}</div>
-                  <div><strong>Medical History:</strong> {(selectedAssignment.patient?.medicalHistory ?? []).join(", ") || "—"}</div>
-                  <div><strong>Medications:</strong> {(selectedAssignment.patient?.currentMedications ?? []).join(", ") || "—"}</div>
-                  <div><strong>Allergies:</strong> {(selectedAssignment.patient?.allergies ?? []).join(", ") || "—"}</div>
-                  <div><strong>Health Goals:</strong> {(selectedAssignment.patient?.healthGoals ?? []).join(", ") || "—"}</div>
-                  <div><strong>Work Schedule:</strong> {selectedAssignment.patient?.workSchedule}</div>
-                  <div><strong>Preferred Meal/Session Time:</strong> {selectedAssignment.patient?.preferredSessionTime}</div>
-                </CardContent>
-              </Card>
+            {selectedAssignment && (
+              <div className="grid grid-cols-1 gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Patient OPD Data</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm space-y-2">
+                    <div>
+                      <strong>Name:</strong> {selectedAssignment.patient?.name}
+                    </div>
+                    <div>
+                      <strong>Demographics:</strong> {selectedAssignment.patient?.age}y •{" "}
+                      {selectedAssignment.patient?.gender}
+                    </div>
+                    <div>
+                      <strong>Anthropometrics:</strong> {selectedAssignment.patient?.height}cm •{" "}
+                      {selectedAssignment.patient?.weight}kg • BMI {selectedAssignment.patient?.bmi} (
+                      {selectedAssignment.patient?.bmiCategory})
+                    </div>
+                    <div>
+                      <strong>Constitution:</strong> {selectedAssignment.patient?.prakriti}
+                    </div>
+                    <div>
+                      <strong>Medical History:</strong>{" "}
+                      {(selectedAssignment.patient?.medicalHistory ?? []).join(", ") || "—"}
+                    </div>
+                    <div>
+                      <strong>Medications:</strong>{" "}
+                      {(selectedAssignment.patient?.currentMedications ?? []).join(", ") || "—"}
+                    </div>
+                    <div>
+                      <strong>Allergies:</strong>{" "}
+                      {(selectedAssignment.patient?.allergies ?? []).join(", ") || "—"}
+                    </div>
+                    <div>
+                      <strong>Health Goals:</strong>{" "}
+                      {(selectedAssignment.patient?.healthGoals ?? []).join(", ") || "—"}
+                    </div>
+                    <div>
+                      <strong>Work Schedule:</strong> {selectedAssignment.patient?.workSchedule}
+                    </div>
+                    <div>
+                      <strong>Preferred Meal/Session Time:</strong>{" "}
+                      {selectedAssignment.patient?.preferredSessionTime}
+                    </div>
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardHeader><CardTitle>Diet Plan (Review & Edit)</CardTitle></CardHeader>
-                <CardContent>
-                  <textarea
-                    className="w-full h-64 p-3 text-sm border rounded whitespace-pre-wrap"
-                    placeholder="Generated plan will appear here. You can edit before saving."
-                    value={previewPlan}
-                    onChange={(e) => setPreviewPlan(e.target.value)}
-                  />
-                  <div className="flex gap-2 mt-3">
-                    <Button onClick={handleSavePlan}>Save & Activate</Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Diet Plan (Review & Edit)</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <textarea
+                      className="w-full h-64 p-3 text-sm border rounded whitespace-pre-wrap"
+                      placeholder="Generated plan will appear here. You can edit before saving."
+                      value={previewPlan}
+                      onChange={(e) => setPreviewPlan(e.target.value)}
+                    />
+                    <div className="flex gap-2 mt-3">
+                      <Button onClick={handleSavePlan}>Save & Activate</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </motion.div>
         </DialogContent>
       </Dialog>
     </div>
