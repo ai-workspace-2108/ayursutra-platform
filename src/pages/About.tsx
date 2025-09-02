@@ -220,7 +220,7 @@ export default function About() {
               <span className="sr-only">Back to Home</span>
             </Button>
             <div className="flex items-center gap-3">
-              <img src="/logo.svg" alt="AyurSutra logo" className="h-7 w-7" />
+              <img src="/assets/ChatGPT_Image_Sep_2__2025__08_48_00_AM.png" alt="AyurSutra logo" className="h-7 w-7 rounded" />
               <span className="font-semibold text-lg">About AyurSutra</span>
             </div>
           </div>

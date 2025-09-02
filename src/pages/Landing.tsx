@@ -83,7 +83,7 @@ export default function Landing() {
               className="flex items-center space-x-3 cursor-pointer"
               onClick={() => navigate("/")}
             >
-              <img src="/logo.svg" alt="AyurSutra" className="h-8 w-8" />
+              <img src="/assets/ChatGPT_Image_Sep_2__2025__08_48_00_AM.png" alt="AyurSutra" className="h-8 w-8 rounded" />
               <span className="text-xl font-bold text-foreground">AyurSutra</span>
             </div>
 
