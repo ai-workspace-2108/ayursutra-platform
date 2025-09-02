@@ -204,7 +204,7 @@ export default function About() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background ayur-bg">
       {/* Top bar */}
       <motion.nav
         initial={{ opacity: 0, y: -12 }}
@@ -365,9 +365,8 @@ export default function About() {
             ))}
           </div>
 
-          {/* CTA beneath team */}
+          {/* CTA beneath team (remove Get Started) */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center mt-2">
-            <Button onClick={() => navigate("/role-selection")}>Get Started</Button>
             <Button variant="outline" asChild>
               <a href="mailto:team@ayursutra.example" aria-label="Contact Our Team">
                 Contact Our Team
@@ -395,7 +394,7 @@ export default function About() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Narrative */}
-            <Card className="lg:col-span-1">
+            <Card className="lg:col-span-1 glass-card">
               <CardHeader>
                 <CardTitle>Background & Narrative</CardTitle>
               </CardHeader>
@@ -416,7 +415,7 @@ export default function About() {
             </Card>
 
             {/* Timeline */}
-            <Card className="lg:col-span-2">
+            <Card className="lg:col-span-2 glass-card">
               <CardHeader>
                 <CardTitle>Timeline</CardTitle>
                 <CardDescription>Key milestones across research, guidance, consultation, and development</CardDescription>
@@ -461,7 +460,7 @@ export default function About() {
             Expert Guidance Acknowledgment
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
+            <Card className="glass-card">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -477,7 +476,7 @@ export default function About() {
                 </p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="glass-card">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -506,7 +505,7 @@ export default function About() {
           className="grid grid-cols-1 md:grid-cols-3 gap-6"
           aria-label="Standards and compliance"
         >
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -517,7 +516,7 @@ export default function About() {
               Optimized across desktop (3-column), tablet (2-column), and mobile (single column) for clarity and speed.
             </CardContent>
           </Card>
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -528,7 +527,7 @@ export default function About() {
               Semantic structure, proper headings, alt text, keyboard navigation, and high contrast for readability.
             </CardContent>
           </Card>
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -548,7 +547,7 @@ export default function About() {
           transition={{ duration: 0.45, delay: 0.14 }}
           className="text-center"
         >
-          <Card className="border-primary/20">
+          <Card className="glass-card border-primary/20">
             <CardHeader>
               <CardTitle className="text-xl">Be Part of the AyurSutra Community</CardTitle>
             </CardHeader>
