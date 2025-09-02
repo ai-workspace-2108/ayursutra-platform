@@ -8,6 +8,7 @@ import { Calendar, Clock, CheckCircle2, AlertTriangle, Activity, Users, Briefcas
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 export default function TherapistDashboard() {
   const { signOut } = useAuth();
