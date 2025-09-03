@@ -10,6 +10,8 @@ import { useNavigate } from "react-router";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 export default function TherapistDashboard() {
   const { signOut } = useAuth();
@@ -24,6 +26,48 @@ export default function TherapistDashboard() {
   const [therapistName, setTherapistName] = useState<string>("");
   const [tempName, setTempName] = useState<string>("");
   const [isNameDialogOpen, setIsNameDialogOpen] = useState<boolean>(false);
+
+  const sessions = useQuery(api.sessions.listForTherapistSelf, {}) ?? [];
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const endOfToday = new Date();
+  endOfToday.setHours(23, 59, 59, 999);
+  const startMs = startOfToday.getTime();
+  const endMs = endOfToday.getTime();
+
+  const sessionsToday = sessions.filter(
+    (s) => s.scheduledAt >= startMs && s.scheduledAt <= endMs && s.status !== "cancelled"
+  );
+  const totalToday = sessionsToday.length;
+  const completedToday = sessionsToday.filter((s) => s.status === "completed").length;
+
+  const upcomingToday = sessionsToday
+    .filter((s) => s.scheduledAt >= Date.now() && s.status === "assigned")
+    .sort((a, b) => a.scheduledAt - b.scheduledAt);
+
+  const nextSession = upcomingToday.length > 0 ? upcomingToday[0] : null;
+
+  // Buckets for Sessions tab
+  const comingAll = sessions
+    .filter((s) => s.status === "assigned" && s.scheduledAt >= Date.now())
+    .sort((a, b) => a.scheduledAt - b.scheduledAt);
+
+  const pastAll = sessions
+    .filter((s) => s.scheduledAt < Date.now() && s.status !== "cancelled")
+    .sort((a, b) => b.scheduledAt - a.scheduledAt);
+
+  const cancelledAll = sessions
+    .filter((s) => s.status === "cancelled")
+    .sort((a, b) => b.scheduledAt - a.scheduledAt);
+
+  function formatTime(ms: number) {
+    try {
+      return new Date(ms).toLocaleString();
+    } catch {
+      return "—";
+    }
+  }
 
   useEffect(() => {
     try {
@@ -110,7 +154,7 @@ export default function TherapistDashboard() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">0</div>
+                  <div className="text-2xl font-bold">{totalToday}</div>
                   <p className="text-xs text-muted-foreground">Scheduled for today</p>
                 </CardContent>
               </Card>
@@ -123,7 +167,7 @@ export default function TherapistDashboard() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">0</div>
+                  <div className="text-2xl font-bold">{completedToday}</div>
                   <p className="text-xs text-muted-foreground">Marked as done</p>
                 </CardContent>
               </Card>
@@ -136,8 +180,12 @@ export default function TherapistDashboard() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">—</div>
-                  <p className="text-xs text-muted-foreground">Countdown starts when scheduled</p>
+                  <div className="text-2xl font-bold">
+                    {nextSession ? formatTime(nextSession.scheduledAt) : "—"}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {nextSession ? `With ${nextSession.patientName}` : "Countdown starts when scheduled"}
+                  </p>
                 </CardContent>
               </Card>
 
@@ -149,7 +197,9 @@ export default function TherapistDashboard() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">Light</div>
+                  <div className="text-2xl font-bold">
+                    {totalToday === 0 ? "Light" : totalToday < 4 ? "Moderate" : "High"}
+                  </div>
                   <p className="text-xs text-muted-foreground">Auto-calculated from sessions</p>
                 </CardContent>
               </Card>
@@ -175,9 +225,25 @@ export default function TherapistDashboard() {
                     <CardDescription>Next few scheduled sessions will appear here</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div className="text-sm text-muted-foreground">
-                      No upcoming sessions yet. Sessions assigned to you will show in real-time.
-                    </div>
+                    {upcomingToday.length === 0 ? (
+                      <div className="text-sm text-muted-foreground">
+                        No upcoming sessions yet. Sessions assigned to you will show in real-time.
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {upcomingToday.slice(0, 5).map((s) => (
+                          <div key={s._id} className="flex items-center justify-between border rounded p-2">
+                            <div className="text-sm">
+                              <div className="font-medium">{s.patientName}</div>
+                              <div className="text-muted-foreground">{formatTime(s.scheduledAt)}</div>
+                            </div>
+                            <div className="text-xs px-2 py-1 rounded bg-amber-100 text-amber-800">
+                              {s.status}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -224,21 +290,57 @@ export default function TherapistDashboard() {
                     </TabsList>
 
                     <TabsContent value="coming" className="mt-6 space-y-4">
-                      <div className="text-sm text-muted-foreground">
-                        Your upcoming sessions will be listed here with preparation checklists.
-                      </div>
+                      {comingAll.length === 0 ? (
+                        <div className="text-sm text-muted-foreground">No upcoming sessions.</div>
+                      ) : (
+                        comingAll.map((s) => (
+                          <div key={s._id} className="flex items-center justify-between border rounded p-3">
+                            <div>
+                              <div className="font-medium">{s.patientName}</div>
+                              <div className="text-sm text-muted-foreground">{formatTime(s.scheduledAt)}</div>
+                            </div>
+                            <div className="text-xs px-2 py-1 rounded bg-primary/10 text-primary">
+                              {s.status}
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </TabsContent>
 
                     <TabsContent value="past" className="mt-6 space-y-4">
-                      <div className="text-sm text-muted-foreground">
-                        Completed session history with notes and ratings will appear here.
-                      </div>
+                      {pastAll.length === 0 ? (
+                        <div className="text-sm text-muted-foreground">No past sessions.</div>
+                      ) : (
+                        pastAll.map((s) => (
+                          <div key={s._id} className="flex items-center justify-between border rounded p-3">
+                            <div>
+                              <div className="font-medium">{s.patientName}</div>
+                              <div className="text-sm text-muted-foreground">{formatTime(s.scheduledAt)}</div>
+                            </div>
+                            <div className="text-xs px-2 py-1 rounded bg-green-100 text-green-800">
+                              {s.status}
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </TabsContent>
 
                     <TabsContent value="cancelled" className="mt-6 space-y-4">
-                      <div className="text-sm text-muted-foreground">
-                        Cancelled sessions along with reasons and rescheduling options will be listed here.
-                      </div>
+                      {cancelledAll.length === 0 ? (
+                        <div className="text-sm text-muted-foreground">No cancelled sessions.</div>
+                      ) : (
+                        cancelledAll.map((s) => (
+                          <div key={s._id} className="flex items-center justify-between border rounded p-3">
+                            <div>
+                              <div className="font-medium">{s.patientName}</div>
+                              <div className="text-sm text-muted-foreground">{formatTime(s.scheduledAt)}</div>
+                            </div>
+                            <div className="text-xs px-2 py-1 rounded bg-gray-200 text-gray-800">
+                              {s.status}
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </TabsContent>
                   </Tabs>
                 </CardContent>

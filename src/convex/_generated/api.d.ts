@@ -22,6 +22,7 @@ import type * as http from "../http.js";
 import type * as patients from "../patients.js";
 import type * as practitioner_auth_logic from "../practitioner_auth_logic.js";
 import type * as seedData from "../seedData.js";
+import type * as sessions from "../sessions.js";
 import type * as therapists from "../therapists.js";
 import type * as users from "../users.js";
 
@@ -43,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   patients: typeof patients;
   practitioner_auth_logic: typeof practitioner_auth_logic;
   seedData: typeof seedData;
+  sessions: typeof sessions;
   therapists: typeof therapists;
   users: typeof users;
 }>;

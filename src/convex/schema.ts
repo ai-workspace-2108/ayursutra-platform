@@ -1,6 +1,6 @@
 import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
-import { Infer, v } from "convex/values";
+import { v, Infer } from "convex/values";
 
 // default user roles. can add / remove based on the project as needed
 export const ROLES = {
@@ -227,6 +227,18 @@ const schema = defineSchema(
     })
       .index("by_practitionerId_and_timeSlot", ["practitionerId", "timeSlot"])
       .index("by_patientId_and_timeSlot", ["patientId", "timeSlot"]),
+
+    sessions: defineTable({
+      therapistUserId: v.string(), // auth subject of therapist (avoids cross-table join)
+      patientName: v.string(),
+      scheduledAt: v.number(), // ms timestamp
+      status: v.union(v.literal("assigned"), v.literal("completed"), v.literal("cancelled")),
+      notes: v.string(),
+      createdByUserId: v.string(),
+    })
+      .index("by_therapistUserId", ["therapistUserId"])
+      .index("by_therapistUserId_and_status", ["therapistUserId", "status"])
+      .index("by_therapistUserId_and_scheduledAt", ["therapistUserId", "scheduledAt"]),
   },
   {
     schemaValidation: false,
