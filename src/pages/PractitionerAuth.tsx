@@ -5,7 +5,7 @@ import { api } from "@/convex/_generated/api";
 
 export default function PractitionerAuth() {
   const navigate = useNavigate();
-  const registerTherapist = useMutation(api.therapists.registerSelfIfMissing);
+  // Removed therapist self-registration to revert to last deploy
   const registerDietitian = useMutation(api.dietitians.registerSelfIfMissing);
 
   useEffect(() => {
@@ -13,16 +13,7 @@ export default function PractitionerAuth() {
     const selectedRole = sessionStorage.getItem("selectedRole");
     // For Therapist, proceed to the Therapist Dashboard to maintain the flow
     if (selectedRole === "therapist") {
-      (async () => {
-        try {
-          // Ensure therapist record exists and is available before redirect
-          await registerTherapist({});
-        } catch {
-          // Non-blocking: if registration fails, continue navigation
-        } finally {
-          navigate("/therapist-dashboard", { replace: true });
-        }
-      })();
+      navigate("/therapist-dashboard", { replace: true });
       return;
     }
 
@@ -40,7 +31,7 @@ export default function PractitionerAuth() {
     }
     // Fallback: send them back to role selection
     navigate("/role-selection", { replace: true });
-  }, [navigate, registerTherapist]);
+  }, [navigate, registerDietitian]);
 
   return (
     <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">

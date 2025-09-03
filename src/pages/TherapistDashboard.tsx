@@ -9,11 +9,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
-import { toast } from "sonner";
 
 export default function TherapistDashboard() {
   const { signOut } = useAuth();
@@ -25,7 +22,6 @@ export default function TherapistDashboard() {
     month: "long",
     day: "numeric",
   });
-  const [therapistName, setTherapistName] = useState<string>("");
   const [tempName, setTempName] = useState<string>("");
   const [isNameDialogOpen, setIsNameDialogOpen] = useState<boolean>(false);
 
@@ -75,49 +71,6 @@ export default function TherapistDashboard() {
     .filter((s) => s.status === "cancelled")
     .sort((a, b) => b.scheduledAt - a.scheduledAt);
 
-  const updateTherapistName = useMutation(api.therapists.updateTherapistNameSelf);
-  const ensureTherapist = useMutation(api.therapists.registerSelfIfMissing);
-
-  useEffect(() => {
-    // Create therapist profile quietly if missing
-    ensureTherapist({}).catch(() => {});
-  }, [ensureTherapist]);
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("therapist_name");
-      if (saved && saved.trim()) {
-        setTherapistName(saved);
-        setTempName(saved);
-        setIsNameDialogOpen(false);
-      } else {
-        setIsNameDialogOpen(true);
-      }
-    } catch {
-      setIsNameDialogOpen(true);
-    }
-  }, []);
-
-  const handleSaveName = async () => {
-    const name = (tempName || "").trim();
-    if (!name) return;
-    setTherapistName(name);
-    try {
-      localStorage.setItem("therapist_name", name);
-    } catch {
-      // no-op if storage blocked
-    }
-    try {
-      // Guarantee profile exists, then update name in backend
-      await ensureTherapist({});
-      await updateTherapistName({ name });
-      toast("Profile name updated.");
-    } catch (e: any) {
-      toast(e?.message || "Couldn't update profile name. Try again.");
-    }
-    setIsNameDialogOpen(false);
-  };
-
   async function handleSignOut() {
     await signOut();
     navigate("/");
@@ -142,9 +95,6 @@ export default function TherapistDashboard() {
               <span className="font-semibold text-lg">
                 Therapist Dashboard
               </span>
-              {therapistName ? (
-                <span className="text-sm text-muted-foreground">• {therapistName}</span>
-              ) : null}
             </div>
           </div>
         </div>
@@ -431,32 +381,6 @@ export default function TherapistDashboard() {
           </Tabs>
         </motion.div>
       </main>
-
-      <Dialog open={isNameDialogOpen} onOpenChange={setIsNameDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Welcome! What's your name?</DialogTitle>
-            <DialogDescription>
-              We'll use this to personalize your dashboard.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <Input
-              placeholder="Enter your full name"
-              value={tempName}
-              onChange={(e) => setTempName(e.target.value)}
-            />
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsNameDialogOpen(false)}>
-                Skip
-              </Button>
-              <Button onClick={handleSaveName}>
-                Save
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
