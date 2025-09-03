@@ -268,3 +268,30 @@ export const getSlotOccupancy = query({
     };
   },
 });
+
+export const updateTherapistNameSelf = mutation({
+  args: { name: v.string() },
+  handler: async (ctx, args) => {
+    if (!args.name.trim()) {
+      throw new Error("Name is required");
+    }
+
+    // Use Convex user id (Id<"users">), not identity.subject (string)
+    const authUserId = await getAuthUserId(ctx);
+    if (!authUserId) {
+      throw new Error("Not authenticated");
+    }
+
+    const therapist = await ctx.db
+      .query("therapists")
+      .withIndex("by_userId", (q) => q.eq("userId", authUserId))
+      .unique();
+
+    if (!therapist) {
+      throw new Error("Therapist profile not found for this user");
+    }
+
+    await ctx.db.patch(therapist._id, { name: args.name.trim() });
+    return { ok: true };
+  },
+});

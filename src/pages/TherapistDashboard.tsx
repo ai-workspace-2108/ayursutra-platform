@@ -12,6 +12,8 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { useMutation } from "convex/react";
+import { toast } from "sonner";
 
 export default function TherapistDashboard() {
   const { signOut } = useAuth();
@@ -26,6 +28,18 @@ export default function TherapistDashboard() {
   const [therapistName, setTherapistName] = useState<string>("");
   const [tempName, setTempName] = useState<string>("");
   const [isNameDialogOpen, setIsNameDialogOpen] = useState<boolean>(false);
+
+  // Add: helper to format a timestamp (ms) to a readable time like "2:30 PM"
+  function formatTime(ts: number) {
+    try {
+      return new Date(ts).toLocaleTimeString(undefined, {
+        hour: "numeric",
+        minute: "2-digit",
+      });
+    } catch {
+      return "—";
+    }
+  }
 
   const sessions = useQuery(api.sessions.listForTherapistSelf, {}) ?? [];
 
@@ -61,13 +75,13 @@ export default function TherapistDashboard() {
     .filter((s) => s.status === "cancelled")
     .sort((a, b) => b.scheduledAt - a.scheduledAt);
 
-  function formatTime(ms: number) {
-    try {
-      return new Date(ms).toLocaleString();
-    } catch {
-      return "—";
-    }
-  }
+  const updateTherapistName = useMutation(api.therapists.updateTherapistNameSelf);
+  const ensureTherapist = useMutation(api.therapists.registerSelfIfMissing);
+
+  useEffect(() => {
+    // Create therapist profile quietly if missing
+    ensureTherapist({}).catch(() => {});
+  }, [ensureTherapist]);
 
   useEffect(() => {
     try {
@@ -84,7 +98,7 @@ export default function TherapistDashboard() {
     }
   }, []);
 
-  const handleSaveName = () => {
+  const handleSaveName = async () => {
     const name = (tempName || "").trim();
     if (!name) return;
     setTherapistName(name);
@@ -92,6 +106,14 @@ export default function TherapistDashboard() {
       localStorage.setItem("therapist_name", name);
     } catch {
       // no-op if storage blocked
+    }
+    try {
+      // Guarantee profile exists, then update name in backend
+      await ensureTherapist({});
+      await updateTherapistName({ name });
+      toast("Profile name updated.");
+    } catch (e: any) {
+      toast(e?.message || "Couldn't update profile name. Try again.");
     }
     setIsNameDialogOpen(false);
   };
