@@ -18,6 +18,7 @@ import type * as auth from "../auth.js";
 import type * as dev from "../dev.js";
 import type * as dietPlans from "../dietPlans.js";
 import type * as dietitians from "../dietitians.js";
+import type * as exercises from "../exercises.js";
 import type * as http from "../http.js";
 import type * as patients from "../patients.js";
 import type * as practitioner_auth_logic from "../practitioner_auth_logic.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   dev: typeof dev;
   dietPlans: typeof dietPlans;
   dietitians: typeof dietitians;
+  exercises: typeof exercises;
   http: typeof http;
   patients: typeof patients;
   practitioner_auth_logic: typeof practitioner_auth_logic;

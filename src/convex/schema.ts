@@ -5,43 +5,32 @@ import { v, Infer } from "convex/values";
 // default user roles. can add / remove based on the project as needed
 export const ROLES = {
   ADMIN: "admin",
-  USER: "user",
+  USER: "user", 
   MEMBER: "member",
-  DOCTOR: "doctor",
-  THERAPIST: "therapist",
-  DIETITIAN: "dietitian",
 } as const;
 
 export const roleValidator = v.union(
   v.literal(ROLES.ADMIN),
   v.literal(ROLES.USER),
   v.literal(ROLES.MEMBER),
-  v.literal(ROLES.DOCTOR),
-  v.literal(ROLES.THERAPIST),
-  v.literal(ROLES.DIETITIAN),
 );
 export type Role = Infer<typeof roleValidator>;
 
-// Ayurvedic body types (Prakriti)
-export const PRAKRITI_TYPES = {
-  VATA: "vata",
-  PITTA: "pitta",
-  KAPHA: "kapha",
-  VATA_PITTA: "vata_pitta",
-  PITTA_KAPHA: "pitta_kapha",
-  VATA_KAPHA: "vata_kapha",
-  TRIDOSHA: "tridosha",
+// Exercise types
+export const EXERCISE_TYPES = {
+  STRENGTH: "strength",
+  CARDIO: "cardio",
+  FLEXIBILITY: "flexibility",
+  BALANCE: "balance",
 } as const;
 
-export const prakritiValidator = v.union(
-  v.literal(PRAKRITI_TYPES.VATA),
-  v.literal(PRAKRITI_TYPES.PITTA),
-  v.literal(PRAKRITI_TYPES.KAPHA),
-  v.literal(PRAKRITI_TYPES.VATA_PITTA),
-  v.literal(PRAKRITI_TYPES.PITTA_KAPHA),
-  v.literal(PRAKRITI_TYPES.VATA_KAPHA),
-  v.literal(PRAKRITI_TYPES.TRIDOSHA),
+export const exerciseTypeValidator = v.union(
+  v.literal(EXERCISE_TYPES.STRENGTH),
+  v.literal(EXERCISE_TYPES.CARDIO),
+  v.literal(EXERCISE_TYPES.FLEXIBILITY),
+  v.literal(EXERCISE_TYPES.BALANCE),
 );
+export type ExerciseType = Infer<typeof exerciseTypeValidator>;
 
 const schema = defineSchema(
   {
@@ -57,188 +46,86 @@ const schema = defineSchema(
       isAnonymous: v.optional(v.boolean()), // is the user anonymous. do not remove
 
       role: v.optional(roleValidator), // role of the user. do not remove
-    })
-      .index("email", ["email"]), // index for the email. do not remove or modify
+    }).index("email", ["email"]), // index for the email. do not remove or modify
 
-    // OTP sessions table for email verification
-    otp_sessions: defineTable({
-      email: v.string(),
-      otpCode: v.string(),
-      expiresAt: v.number(),
-      isVerified: v.boolean(),
-      attemptsCount: v.number(),
-      role: v.string(),
-    }).index("by_email", ["email"]),
-
-    // AyurSutra specific tables
-    practitioners: defineTable({
-      userId: v.id("users"),
-      specialization: v.array(v.string()),
-      experience: v.number(),
-      bio: v.string(),
-      contact: v.string(),
-      isVerified: v.boolean(),
-      clinicAddress: v.optional(v.string()),
-      imageUrl: v.optional(v.string()),
-    })
-      .index("by_userId", ["userId"])
-      .index("by_isVerified", ["isVerified"]),
-
-    // Therapists table
-    therapists: defineTable({
-      userId: v.id("users"),
+    // Exercises table - predefined exercises that users can add to workouts
+    exercises: defineTable({
       name: v.string(),
-      specialization: v.array(v.string()),
-      experience: v.number(),
-      bio: v.string(),
-      contact: v.string(),
-      isAvailable: v.boolean(),
+      description: v.optional(v.string()),
+      type: exerciseTypeValidator,
+      muscleGroups: v.array(v.string()), // e.g., ["chest", "triceps"]
+      instructions: v.optional(v.string()),
       imageUrl: v.optional(v.string()),
-      rating: v.optional(v.number()),
-      totalSessions: v.number(),
-      hourlyRate: v.optional(v.number()),
+      isCustom: v.boolean(), // true if created by user, false if system default
+      userId: v.optional(v.id("users")), // only set if custom exercise
     })
-      .index("by_userId", ["userId"])
-      .index("by_isAvailable", ["isAvailable"])
-      .index("by_specialization", ["specialization"]),
+      .index("by_type", ["type"])
+      .index("by_user", ["userId"])
+      .index("by_custom", ["isCustom"]),
 
-    // Dietitians table
-    dietitians: defineTable({
+    // Workout templates - reusable workout plans
+    workoutTemplates: defineTable({
+      name: v.string(),
+      description: v.optional(v.string()),
       userId: v.id("users"),
-      name: v.string(),
-      specialization: v.array(v.string()),
-      experience: v.number(),
-      bio: v.string(),
-      contact: v.string(),
-      isAvailable: v.boolean(),
-      imageUrl: v.optional(v.string()),
-      rating: v.optional(v.number()),
-      maxPatientsPerDay: v.number(),
-      currentPatientCount: v.number(),
+      isPublic: v.boolean(),
+      estimatedDuration: v.optional(v.number()), // in minutes
+      difficulty: v.optional(v.union(
+        v.literal("beginner"),
+        v.literal("intermediate"),
+        v.literal("advanced")
+      )),
     })
-      .index("by_userId", ["userId"])
-      .index("by_isAvailable", ["isAvailable"])
-      .index("by_specialization", ["specialization"]),
+      .index("by_user", ["userId"])
+      .index("by_public", ["isPublic"]),
 
-    // Patients table
-    patients: defineTable({
-      // Personal Information
-      name: v.string(),
-      age: v.number(),
-      gender: v.union(v.literal("male"), v.literal("female"), v.literal("other")),
-      contact: v.string(),
-      email: v.optional(v.string()),
-      address: v.string(),
-      emergencyContact: v.string(),
-      
-      // Medical Information
-      height: v.number(), // in cm
-      weight: v.number(), // in kg
-      bmi: v.number(),
-      bmiCategory: v.string(),
-      bloodPressure: v.optional(v.string()),
-      medicalHistory: v.array(v.string()),
-      currentMedications: v.array(v.string()),
-      allergies: v.array(v.string()),
-      
-      // Ayurvedic Assessment
-      prakriti: prakritiValidator,
-      vikriti: v.optional(prakritiValidator),
-      dominantDosha: v.string(),
-      constitutionType: v.string(),
-      
-      // Health Goals & Work Schedule
-      healthGoals: v.array(v.string()),
-      workSchedule: v.string(),
-      preferredSessionTime: v.string(),
-      
-      // Assignment tracking
-      assignedTherapistId: v.optional(v.id("therapists")),
-      assignedDietitianId: v.optional(v.id("dietitians")),
-      doctorId: v.id("users"), // The doctor who registered this patient
-      
-      // Status
-      isActive: v.boolean(),
-    })
-      .index("by_doctorId", ["doctorId"])
-      .index("by_assignedTherapistId", ["assignedTherapistId"])
-      .index("by_assignedDietitianId", ["assignedDietitianId"])
-      .index("by_prakriti", ["prakriti"])
-      .index("by_isActive", ["isActive"]),
-
-    // Therapy Sessions table
-    therapy_sessions: defineTable({
-      patientId: v.id("patients"),
-      therapistId: v.id("therapists"),
-      doctorId: v.id("users"),
-      sessionDate: v.string(), // YYYY-MM-DD format
-      timeSlot: v.string(), // e.g., "09:00-10:00"
-      status: v.union(
-        v.literal("scheduled"),
-        v.literal("completed"),
-        v.literal("cancelled"),
-        v.literal("no_show")
-      ),
-      sessionType: v.string(), // e.g., "Panchakarma", "Massage", "Yoga"
-      notes: v.optional(v.string()),
-      feedback: v.optional(v.string()),
-      rating: v.optional(v.number()),
-    })
-      .index("by_patientId", ["patientId"])
-      .index("by_therapistId", ["therapistId"])
-      .index("by_doctorId", ["doctorId"])
-      .index("by_sessionDate", ["sessionDate"])
-      .index("by_status", ["status"])
-      .index("by_therapistId_and_sessionDate", ["therapistId", "sessionDate"]),
-
-    // Dietitian Assignments table
-    dietitian_assignments: defineTable({
-      patientId: v.id("patients"),
-      dietitianId: v.id("dietitians"),
-      doctorId: v.id("users"),
-      assignedDate: v.string(),
-      status: v.union(
-        v.literal("active"),
-        v.literal("completed"),
-        v.literal("cancelled")
-      ),
-      dietPlan: v.optional(v.string()),
-      notes: v.optional(v.string()),
-      followUpDate: v.optional(v.string()),
-    })
-      .index("by_patientId", ["patientId"])
-      .index("by_dietitianId", ["dietitianId"])
-      .index("by_doctorId", ["doctorId"])
-      .index("by_status", ["status"])
-      .index("by_assignedDate", ["assignedDate"]),
-
-    appointments: defineTable({
-      practitionerId: v.id("practitioners"),
-      patientId: v.id("users"),
-      timeSlot: v.number(),
-      date: v.string(),
-      status: v.union(
-        v.literal("pending"),
-        v.literal("confirmed"),
-        v.literal("cancelled"),
-        v.literal("completed")
-      ),
+    // Exercises within a workout template
+    workoutTemplateExercises: defineTable({
+      workoutTemplateId: v.id("workoutTemplates"),
+      exerciseId: v.id("exercises"),
+      order: v.number(),
+      sets: v.number(),
+      reps: v.optional(v.number()),
+      duration: v.optional(v.number()), // in seconds for cardio/time-based
+      weight: v.optional(v.number()), // in lbs/kg
+      restTime: v.optional(v.number()), // in seconds
       notes: v.optional(v.string()),
     })
-      .index("by_practitionerId_and_timeSlot", ["practitionerId", "timeSlot"])
-      .index("by_patientId_and_timeSlot", ["patientId", "timeSlot"]),
+      .index("by_template", ["workoutTemplateId"])
+      .index("by_template_and_order", ["workoutTemplateId", "order"]),
 
-    sessions: defineTable({
-      therapistUserId: v.string(), // auth subject of therapist (avoids cross-table join)
-      patientName: v.string(),
-      scheduledAt: v.number(), // ms timestamp
-      status: v.union(v.literal("assigned"), v.literal("completed"), v.literal("cancelled")),
-      notes: v.string(),
-      createdByUserId: v.string(),
+    // Workout sessions - actual completed workouts
+    workoutSessions: defineTable({
+      userId: v.id("users"),
+      workoutTemplateId: v.optional(v.id("workoutTemplates")),
+      name: v.string(),
+      date: v.string(), // YYYY-MM-DD format
+      startTime: v.optional(v.number()), // timestamp
+      endTime: v.optional(v.number()), // timestamp
+      duration: v.optional(v.number()), // in minutes
+      notes: v.optional(v.string()),
+      completed: v.boolean(),
     })
-      .index("by_therapistUserId", ["therapistUserId"])
-      .index("by_therapistUserId_and_status", ["therapistUserId", "status"])
-      .index("by_therapistUserId_and_scheduledAt", ["therapistUserId", "scheduledAt"]),
+      .index("by_user", ["userId"])
+      .index("by_user_and_date", ["userId", "date"])
+      .index("by_date", ["date"]),
+
+    // Individual exercise performances within a workout session
+    workoutSessionExercises: defineTable({
+      workoutSessionId: v.id("workoutSessions"),
+      exerciseId: v.id("exercises"),
+      order: v.number(),
+      sets: v.array(v.object({
+        reps: v.optional(v.number()),
+        weight: v.optional(v.number()),
+        duration: v.optional(v.number()), // in seconds
+        completed: v.boolean(),
+        restTime: v.optional(v.number()), // actual rest taken
+      })),
+      notes: v.optional(v.string()),
+    })
+      .index("by_session", ["workoutSessionId"])
+      .index("by_session_and_order", ["workoutSessionId", "order"]),
   },
   {
     schemaValidation: false,
