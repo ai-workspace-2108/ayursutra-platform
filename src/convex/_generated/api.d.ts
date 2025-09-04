@@ -26,6 +26,8 @@ import type * as seedData from "../seedData.js";
 import type * as sessions from "../sessions.js";
 import type * as therapists from "../therapists.js";
 import type * as users from "../users.js";
+import type * as workoutSessions from "../workoutSessions.js";
+import type * as workoutTemplates from "../workoutTemplates.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -49,6 +51,8 @@ declare const fullApi: ApiFromModules<{
   sessions: typeof sessions;
   therapists: typeof therapists;
   users: typeof users;
+  workoutSessions: typeof workoutSessions;
+  workoutTemplates: typeof workoutTemplates;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,
