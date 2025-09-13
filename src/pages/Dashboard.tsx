@@ -823,8 +823,14 @@ export default function Dashboard() {
                 {profilePatient.email && <div>Email: {profilePatient.email}</div>}
                 <div>BMI: {profilePatient.bmi} ({profilePatient.bmiCategory})</div>
                 <div>Dominant Dosha: {profilePatient.dominantDosha}</div>
-                <div>Prakriti: {profilePatient.prakriti}</div>
-                {profilePatient.vikriti && <div>Vikriti: {profilePatient.vikriti}</div>}
+                <div>
+  Prakriti: {typeof profilePatient.prakriti === "string" ? profilePatient.prakriti : JSON.stringify(profilePatient.prakriti)}
+</div>
+                {profilePatient.vikriti && (
+  <div>
+    Vikriti: {typeof profilePatient.vikriti === "string" ? profilePatient.vikriti : JSON.stringify(profilePatient.vikriti)}
+  </div>
+)}
                 <div>
                   Health Goals:{" "}
                   {profilePatient.healthGoals && profilePatient.healthGoals.length
