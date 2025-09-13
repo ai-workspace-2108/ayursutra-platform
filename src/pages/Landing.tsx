@@ -18,6 +18,23 @@ import { useNavigate } from "react-router";
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useState } from "react";
 
+const TiltCard: React.FC<React.PropsWithChildren<{ className?: string }>> = ({ children, className }) => {
+  return (
+    <motion.div
+      whileHover={{ rotateX: 6, rotateY: -6, translateZ: 8 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 220, damping: 18 }}
+      className={className}
+      style={{
+        transformStyle: "preserve-3d",
+        perspective: 1000,
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
 export default function Landing() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -68,13 +85,15 @@ export default function Landing() {
   ];
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-background relative overflow-hidden ayur-bg">
+      {/* Floating gradient orbs for depth */}
+      <div className="pointer-events-none absolute -top-24 -left-24 h-80 w-80 rounded-full bg-gradient-to-br from-primary/30 via-accent/30 to-primary/10 blur-3xl opacity-60" />
+      <div className="pointer-events-none absolute top-1/3 -right-24 h-80 w-80 rounded-full bg-gradient-to-tr from-primary/20 via-chart-4/20 to-accent/10 blur-3xl opacity-60" />
+      <div className="pointer-events-none absolute bottom-0 left-1/4 h-80 w-80 rounded-full bg-gradient-to-tr from-chart-5/20 via-primary/10 to-chart-2/10 blur-3xl opacity-50" />
+
       {/* Navigation */}
       <motion.nav
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="fixed top-0 w-full z-50 bg-background/70 backdrop-blur-md border-b border-border"
+        className="fixed top-0 w-full z-50 bg-background/60 backdrop-blur-md border-b border-border/60"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -84,7 +103,9 @@ export default function Landing() {
               onClick={() => navigate("/")}
             >
               <img src="/assets/ChatGPT_Image_Sep_2__2025__08_48_00_AM.png" alt="AyurSutra" className="h-8 w-8 rounded" />
-              <span className="text-xl font-bold text-foreground">AyurSutra</span>
+              <span className="text-xl font-bold text-foreground">
+                <span className="bg-gradient-to-r from-primary to-chart-4 bg-clip-text text-transparent">Ayur</span>Sutra
+              </span>
             </div>
 
             {/* Right: Desktop actions */}
@@ -185,10 +206,25 @@ export default function Landing() {
             transition={{ duration: 0.8 }}
             className="text-center space-y-8"
           >
-            <div className="space-y-4">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
-                AyurSutra: Your Gateway to{" "}
-                <span className="text-primary">Authentic Ayurveda</span>
+            <div className="space-y-4 relative">
+              {/* Subtle animated conic gradient halo */}
+              <div className="pointer-events-none absolute -inset-10 -z-10 mx-auto h-64 w-64 sm:h-80 sm:w-80 left-0 right-0 opacity-60">
+                <motion.div
+                  initial={{ rotate: 0, scale: 0.9 }}
+                  animate={{ rotate: 360, scale: 1 }}
+                  transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+                  className="h-full w-full rounded-full blur-3xl"
+                  style={{
+                    background:
+                      "conic-gradient(from 0deg, color-mix(in oklab, var(--primary) 50%, transparent) 0deg, color-mix(in oklab, var(--chart-4) 55%, transparent) 120deg, color-mix(in oklab, var(--chart-5) 50%, transparent) 240deg, color-mix(in oklab, var(--primary) 50%, transparent) 360deg)",
+                  }}
+                />
+              </div>
+
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight [text-wrap:balance]">
+                <span className="bg-gradient-to-r from-primary via-chart-4 to-chart-2 bg-clip-text text-transparent">
+                  AyurSutra: Your Gateway to Authentic Ayurveda
+                </span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
                 Connect with verified Ayurvedic practitioners, book consultations, and embark on your journey to holistic wellness through the ancient wisdom of Ayurveda.
@@ -203,8 +239,8 @@ export default function Landing() {
             >
               <Button 
                 size="lg" 
-                variant="outline" 
-                className="text-lg px-8 py-6"
+                variant="outline"
+                className="text-lg px-8 py-6 border-transparent bg-gradient-to-r from-primary/10 to-accent/10 hover:from-primary/20 hover:to-accent/20 shadow-[0_0_0_1px_inset_hsl(var(--border)),0_12px_40px_-12px_color-mix(in_oklab,var(--primary)60%,transparent)]"
                 onClick={() => navigate("/role-selection")}
               >
                 <Leaf className="mr-2 h-5 w-5" />
@@ -212,32 +248,60 @@ export default function Landing() {
               </Button>
             </motion.div>
 
-            {/* Hero Visual */}
+            {/* Hero Visual - 3D Gradient Panel */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.4 }}
+              transition={{ duration: 1, delay: 0.35 }}
               className="mt-16"
             >
-              <div className="relative max-w-4xl mx-auto">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-3xl blur-3xl"></div>
-                <div className="relative border rounded-3xl p-8 shadow-2xl bg-card">
+              <TiltCard className="relative">
+                {/* Soft moving gradient glows */}
+                <motion.div
+                  aria-hidden
+                  className="pointer-events-none absolute -top-16 -left-8 h-44 w-44 rounded-full blur-3xl"
+                  animate={{ x: [0, 12, 0], y: [0, -8, 0] }}
+                  transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ background: "radial-gradient(60% 60% at 50% 50%, color-mix(in oklab,var(--chart-4) 30%, transparent), transparent 70%)" }}
+                />
+                <motion.div
+                  aria-hidden
+                  className="pointer-events-none absolute -bottom-10 -right-10 h-52 w-52 rounded-full blur-3xl"
+                  animate={{ x: [0, -10, 0], y: [0, 10, 0] }}
+                  transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ background: "radial-gradient(60% 60% at 50% 50%, color-mix(in oklab,var(--chart-2) 28%, transparent), transparent 70%)" }}
+                />
+
+                {/* 3D panel */}
+                <div className="relative border rounded-3xl p-8 shadow-2xl bg-card glass-hero ring-1 ring-primary/10 overflow-hidden">
+                  {/* Animated gradient edge */}
+                  <div className="pointer-events-none absolute inset-0 rounded-3xl">
+                    <div className="absolute inset-0 rounded-3xl [mask-image:linear-gradient(transparent,black,transparent)]">
+                      <motion.div
+                        initial={{ x: "-30%" }}
+                        animate={{ x: "130%" }}
+                        transition={{ duration: 3.5, repeat: Infinity, ease: "linear" }}
+                        className="h-px w-1/3 bg-gradient-to-r from-transparent via-primary/60 to-transparent absolute top-0"
+                      />
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                     <div className="space-y-2">
-                      <div className="text-3xl font-bold text-primary">500+</div>
+                      <div className="text-3xl font-bold bg-gradient-to-r from-primary to-chart-3 bg-clip-text text-transparent drop-shadow-sm">500+</div>
                       <div className="text-muted-foreground">Verified Practitioners</div>
                     </div>
                     <div className="space-y-2">
-                      <div className="text-3xl font-bold text-primary">10,000+</div>
+                      <div className="text-3xl font-bold bg-gradient-to-r from-chart-4 to-primary bg-clip-text text-transparent drop-shadow-sm">10,000+</div>
                       <div className="text-muted-foreground">Happy Patients</div>
                     </div>
                     <div className="space-y-2">
-                      <div className="text-3xl font-bold text-primary">50+</div>
+                      <div className="text-3xl font-bold bg-gradient-to-r from-chart-5 to-chart-2 bg-clip-text text-transparent drop-shadow-sm">50+</div>
                       <div className="text-muted-foreground">Cities Covered</div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </TiltCard>
             </motion.div>
           </motion.div>
         </div>
@@ -254,7 +318,7 @@ export default function Landing() {
             className="text-center space-y-16"
           >
             <div className="space-y-4">
-              <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
+              <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-chart-4 bg-clip-text text-transparent">
                 Bridging Ancient Wisdom with Modern Convenience
               </h2>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -326,7 +390,7 @@ export default function Landing() {
             className="text-center space-y-16"
           >
             <div className="space-y-4">
-              <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
+              <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary via-chart-3 to-chart-5 bg-clip-text text-transparent">
                 Empowering the Ayurvedic Ecosystem
               </h2>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -343,19 +407,23 @@ export default function Landing() {
                   transition={{ duration: 0.8, delay: index * 0.1 }}
                   viewport={{ once: true }}
                 >
-                  <Card className="h-full text-center hover:shadow-lg transition-shadow duration-300">
-                    <CardHeader>
-                      <div className="mx-auto w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                        <feature.icon className="w-6 h-6 text-primary" />
-                      </div>
-                      <CardTitle className="text-xl">{feature.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-base">
-                        {feature.description}
-                      </CardDescription>
-                    </CardContent>
-                  </Card>
+                  <TiltCard>
+                    <Card className="h-full text-center hover:shadow-xl transition-all duration-300 glass-card ring-1 ring-primary/10 hover:-translate-y-1 hover:scale-[1.01]">
+                      <CardHeader>
+                        <div className="mx-auto w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                          <feature.icon className="w-6 h-6 text-primary" />
+                        </div>
+                        <CardTitle className="text-xl bg-gradient-to-r from-primary to-chart-4 bg-clip-text text-transparent">
+                          {feature.title}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <CardDescription className="text-base">
+                          {feature.description}
+                        </CardDescription>
+                      </CardContent>
+                    </Card>
+                  </TiltCard>
                 </motion.div>
               ))}
             </div>
@@ -374,7 +442,7 @@ export default function Landing() {
             className="text-center space-y-16"
           >
             <div className="space-y-4">
-              <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
+              <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-chart-2 bg-clip-text text-transparent">
                 Trusted by Practitioners and Patients
               </h2>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -391,24 +459,28 @@ export default function Landing() {
                   transition={{ duration: 0.8, delay: index * 0.1 }}
                   viewport={{ once: true }}
                 >
-                  <Card className="h-full">
-                    <CardHeader>
-                      <div className="flex items-center space-x-1 mb-2">
-                        {[...Array(testimonial.rating)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-primary text-primary" />
-                        ))}
-                      </div>
-                      <CardDescription className="text-base italic">
-                        "{testimonial.content}"
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-1">
-                        <div className="font-semibold text-foreground">{testimonial.name}</div>
-                        <div className="text-sm text-muted-foreground">{testimonial.role}</div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <TiltCard>
+                    <Card className="h-full glass-card hover:shadow-xl transition-all duration-300 ring-1 ring-primary/10">
+                      <CardHeader>
+                        <div className="flex items-center space-x-1 mb-2">
+                          {[...Array(testimonial.rating)].map((_, i) => (
+                            <Star key={i} className="w-4 h-4 fill-primary text-primary" />
+                          ))}
+                        </div>
+                        <CardDescription className="text-base italic">
+                          "{testimonial.content}"
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-1">
+                          <div className="font-semibold bg-gradient-to-r from-primary to-chart-4 bg-clip-text text-transparent">
+                            {testimonial.name}
+                          </div>
+                          <div className="text-sm text-muted-foreground">{testimonial.role}</div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TiltCard>
                 </motion.div>
               ))}
             </div>
@@ -426,10 +498,10 @@ export default function Landing() {
             viewport={{ once: true }}
             className="text-center space-y-8"
           >
-            <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
+            <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 glass-card ring-1 ring-primary/10">
               <CardHeader className="space-y-6 pb-8">
                 <div className="space-y-4">
-                  <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
+                  <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-chart-4 to-primary bg-clip-text text-transparent">
                     Ready to Begin Your Ayurvedic Journey?
                   </h2>
                   <p className="text-xl text-muted-foreground">
@@ -441,7 +513,7 @@ export default function Landing() {
                   <Button 
                     size="lg" 
                     variant="outline" 
-                    className="text-lg px-8 py-6"
+                    className="text-lg px-8 py-6 border-primary/30 bg-gradient-to-r from-primary/10 to-accent/10 hover:from-primary/20 hover:to-accent/20"
                     onClick={() => navigate("/role-selection")}
                   >
                     <MapPin className="mr-2 h-5 w-5" />
@@ -455,13 +527,15 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-card border-t">
+      <footer className="bg-card/80 backdrop-blur border-t">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
                 <img src="/logo.svg" alt="AyurSutra" className="h-8 w-8" />
-                <span className="text-xl font-bold text-foreground">AyurSutra</span>
+                <span className="text-xl font-bold bg-gradient-to-r from-primary to-chart-4 bg-clip-text text-transparent">
+                  AyurSutra
+                </span>
               </div>
               <p className="text-muted-foreground">
                 Connecting authentic Ayurvedic practitioners with patients seeking holistic wellness.

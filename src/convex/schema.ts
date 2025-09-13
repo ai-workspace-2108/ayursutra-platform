@@ -32,6 +32,19 @@ export const exerciseTypeValidator = v.union(
 );
 export type ExerciseType = Infer<typeof exerciseTypeValidator>;
 
+// Add prakriti validator for Ayurvedic assessments used across patients
+export const prakritiValidator = v.union(
+  v.object({
+    vata: v.number(),
+    pitta: v.number(),
+    kapha: v.number(),
+    dominantDosha: v.string(),
+    constitutionType: v.string(),
+  }),
+  // Allow simple string storage fallback (seed/demo)
+  v.string(),
+);
+
 const schema = defineSchema(
   {
     // default auth tables using convex auth.
@@ -126,6 +139,143 @@ const schema = defineSchema(
     })
       .index("by_session", ["workoutSessionId"])
       .index("by_session_and_order", ["workoutSessionId", "order"]),
+
+    // --- Added domain tables used by the app ---
+
+    // Therapists directory
+    therapists: defineTable({
+      userId: v.id("users"),
+      name: v.string(),
+      specialization: v.array(v.string()),
+      experience: v.number(),
+      bio: v.string(),
+      contact: v.string(),
+      isAvailable: v.boolean(),
+      imageUrl: v.optional(v.string()),
+      rating: v.optional(v.number()),
+      totalSessions: v.number(),
+      hourlyRate: v.number(),
+    }).index("by_isAvailable", ["isAvailable"]),
+
+    // Dietitians directory
+    dietitians: defineTable({
+      userId: v.id("users"),
+      name: v.string(),
+      specialization: v.array(v.string()),
+      experience: v.number(),
+      bio: v.string(),
+      contact: v.string(),
+      isAvailable: v.boolean(),
+      imageUrl: v.optional(v.string()),
+      rating: v.optional(v.number()),
+      maxPatientsPerDay: v.number(),
+      currentPatientCount: v.number(),
+    })
+      .index("by_isAvailable", ["isAvailable"])
+      .index("by_userId", ["userId"]),
+
+    // Patients with Ayurvedic fields
+    patients: defineTable({
+      // Personal
+      name: v.string(),
+      age: v.number(),
+      gender: v.union(v.literal("male"), v.literal("female"), v.literal("other")),
+      contact: v.string(),
+      email: v.optional(v.string()),
+      address: v.string(),
+      emergencyContact: v.string(),
+
+      // Medical
+      height: v.number(),
+      weight: v.number(),
+      bmi: v.number(),
+      bmiCategory: v.string(),
+      bloodPressure: v.optional(v.string()),
+      medicalHistory: v.array(v.string()),
+      currentMedications: v.array(v.string()),
+      allergies: v.array(v.string()),
+
+      // Ayurvedic
+      prakriti: prakritiValidator,
+      vikriti: v.optional(prakritiValidator),
+      dominantDosha: v.string(),
+      constitutionType: v.string(),
+
+      // Schedule & preferences
+      healthGoals: v.array(v.string()),
+      workSchedule: v.string(),
+      preferredSessionTime: v.string(),
+
+      // Assignments
+      assignedTherapistId: v.optional(v.id("therapists")),
+      assignedDietitianId: v.optional(v.id("dietitians")),
+
+      // Owner doctor
+      doctorId: v.id("users"),
+
+      // Status
+      isActive: v.boolean(),
+    }).index("by_doctorId", ["doctorId"]),
+
+    // Therapy sessions (with therapists)
+    therapy_sessions: defineTable({
+      patientId: v.id("patients"),
+      therapistId: v.id("therapists"),
+      doctorId: v.id("users"),
+      sessionDate: v.string(), // "YYYY-MM-DD"
+      timeSlot: v.string(), // "HH:MM-HH:MM"
+      status: v.union(
+        v.literal("scheduled"),
+        v.literal("completed"),
+        v.literal("cancelled"),
+        v.literal("no_show"),
+      ),
+      sessionType: v.string(),
+      notes: v.optional(v.string()),
+      rating: v.optional(v.number()),
+    })
+      .index("by_therapistId", ["therapistId"])
+      .index("by_sessionDate", ["sessionDate"])
+      .index("by_therapistId_and_sessionDate", ["therapistId", "sessionDate"]),
+
+    // Dietitian assignments
+    dietitian_assignments: defineTable({
+      patientId: v.id("patients"),
+      dietitianId: v.id("dietitians"),
+      doctorId: v.id("users"),
+      assignedDate: v.string(), // "YYYY-MM-DD"
+      status: v.union(
+        v.literal("active"),
+        v.literal("completed"),
+        v.literal("cancelled"),
+      ),
+      notes: v.optional(v.string()),
+      dietPlan: v.optional(v.string()),
+    }).index("by_dietitianId", ["dietitianId"]),
+
+    // Lightweight sessions list keyed by therapist auth user id
+    sessions: defineTable({
+      therapistUserId: v.string(),
+      patientName: v.string(),
+      scheduledAt: v.number(), // ms timestamp
+      status: v.union(
+        v.literal("assigned"),
+        v.literal("completed"),
+        v.literal("cancelled"),
+      ),
+      notes: v.string(),
+      createdByUserId: v.string(),
+    }).index("by_therapistUserId", ["therapistUserId"]),
+
+    // OTP sessions for practitioner onboarding
+    otp_sessions: defineTable({
+      email: v.string(),
+      otpCode: v.string(),
+      expiresAt: v.number(),
+      isVerified: v.boolean(),
+      attemptsCount: v.number(),
+      role: v.string(),
+    }).index("by_email", ["email"]),
   },
   {
     schemaValidation: false,

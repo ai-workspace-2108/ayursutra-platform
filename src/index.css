@@ -260,3 +260,63 @@
   -webkit-backdrop-filter: saturate(1.2) blur(10px);
   border-color: color-mix(in oklab, var(--border) 65%, transparent);
 }
+
+/* Animated gradient utilities and subtle 3D polish */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes float-x {
+  0%, 100% { transform: translateX(0px); }
+  50% { transform: translateX(8px); }
+}
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes soft-glow {
+  0%, 100% { box-shadow: 0 10px 30px color-mix(in oklab, var(--primary) 14%, transparent); }
+  50% { box-shadow: 0 16px 42px color-mix(in oklab, var(--primary) 24%, transparent); }
+}
+
+/* 3D tilt shadow enhancer */
+.tilt-shadow {
+  box-shadow:
+    0 12px 24px color-mix(in oklab, var(--primary) 10%, transparent),
+    0 6px 14px color-mix(in oklab, var(--foreground) 6%, transparent);
+}
+
+/* Animated gradient button */
+.animated-gradient-btn {
+  background: linear-gradient(90deg, var(--chart-1), var(--chart-4), var(--chart-2), var(--chart-5));
+  background-size: 300% 300%;
+  color: var(--primary-foreground);
+  border-color: color-mix(in oklab, var(--ring) 40%, transparent);
+  animation: gradient-shift 12s ease infinite;
+}
+.animated-gradient-btn:hover {
+  filter: saturate(1.1);
+  animation-duration: 8s;
+  transform: translateY(-1px);
+}
+
+/* Subtle button glow on larger buttons */
+.btn-glow {
+  animation: soft-glow 3.5s ease-in-out infinite;
+}
+
+/* Glass ring accent for hero and key cards */
+.ring-accent {
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--ring) 35%, transparent) inset,
+    0 14px 40px color-mix(in oklab, var(--primary) 12%, transparent);
+}
+
+/* Floating orb utility */
+.floating-orb {
+  animation: float-y 8s ease-in-out infinite, float-x 10s ease-in-out infinite;
+  will-change: transform;
+  filter: blur(2px);
+  opacity: 0.65;
+}
