@@ -85,7 +85,10 @@ export default function Landing() {
   ];
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden ayur-bg">
+    <div className="min-h-screen relative overflow-hidden bg-background bg-[url('/assets/ChatGPT_Image_Sep_2__2025__08_24_19_AM.png')] bg-cover bg-center">
+      {/* Readability overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/80 to-background/95 pointer-events-none" />
+
       {/* Floating gradient orbs for depth */}
       <div className="pointer-events-none absolute -top-24 -left-24 h-80 w-80 rounded-full bg-gradient-to-br from-primary/30 via-accent/30 to-primary/10 blur-3xl opacity-60" />
       <div className="pointer-events-none absolute top-1/3 -right-24 h-80 w-80 rounded-full bg-gradient-to-tr from-primary/20 via-chart-4/20 to-accent/10 blur-3xl opacity-60" />
